@@ -36,7 +36,7 @@ El motor busca medir la capacidad ofensiva sostenible del equipo.
 
 # Entradas
 
-El motor utilizará información proveniente de distintas variables definidas en `docs/02-Variables.md`.
+El motor utilizará información proveniente de distintas variables definidas en `docs/03-Variables.md`.
 
 Inicialmente se contemplan las siguientes:
 
@@ -161,7 +161,7 @@ El motor nunca deberá:
 
 Este motor depende de:
 
-- docs/02-Variables.md
+- docs/03-Variables.md
 
 Será utilizado por:
 

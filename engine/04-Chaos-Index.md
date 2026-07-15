@@ -50,7 +50,7 @@ El motor podrá utilizar información proveniente de:
 
 Además podrá considerar variables contextuales definidas en:
 
-- docs/02-Variables.md
+- docs/03-Variables.md
 
 ---
 

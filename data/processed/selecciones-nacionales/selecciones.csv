@@ -1,1 +1,41 @@
 id_seleccion,nombre_pais,nombre_federacion,confederacion,ranking_fifa_actual,ranking_fifa_fecha,seleccionador_actual,activa
+ARG,Argentina,Asociación del Fútbol Argentino (AFA),CONMEBOL,1,2026-06-11,Lionel Scaloni,true
+ESP,España,Real Federación Española de Fútbol (RFEF),UEFA,2,2026-06-11,Luis de la Fuente,true
+FRA,Francia,Fédération Française de Football (FFF),UEFA,3,2026-06-11,Didier Deschamps,true
+ENG,Inglaterra,The Football Association (FA),UEFA,4,2026-06-11,Thomas Tuchel,true
+POR,Portugal,Federação Portuguesa de Futebol (FPF),UEFA,5,2026-06-11,Roberto Martínez,true
+BRA,Brasil,Confederação Brasileira de Futebol (CBF),CONMEBOL,6,2026-06-11,Carlo Ancelotti,true
+MAR,Marruecos,Fédération Royale Marocaine de Football (FRMF),CAF,7,2026-06-11,Mohamed Ouahbi,true
+NED,Países Bajos,Koninklijke Nederlandse Voetbalbond (KNVB),UEFA,8,2026-06-11,Ronald Koeman,true
+BEL,Bélgica,Union Royale Belge des Sociétés de Football Association (RBFA),UEFA,9,2026-06-11,Rudi Garcia,true
+GER,Alemania,Deutscher Fußball-Bund (DFB),UEFA,10,2026-06-11,Julian Nagelsmann,true
+CRO,Croacia,Hrvatski nogometni savez (HNS),UEFA,11,2026-06-11,Slaven Bilić,true
+ITA,Italia,Federazione Italiana Giuoco Calcio (FIGC),UEFA,12,2026-06-11,Luciano Spalletti,true
+COL,Colombia,Federación Colombiana de Fútbol (FCF),CONMEBOL,13,2026-06-11,Néstor Lorenzo,true
+MEX,México,Federación Mexicana de Fútbol (FMF),CONCACAF,14,2026-06-11,Rafael Márquez,true
+SEN,Senegal,Fédération Sénégalaise de Football (FSF),CAF,15,2026-06-11,Vacante,true
+URU,Uruguay,Asociación Uruguaya de Fútbol (AUF),CONMEBOL,16,2026-06-11,Diego Forlán (interino),true
+USA,Estados Unidos,U.S. Soccer Federation (USSF),CONCACAF,17,2026-06-11,Mauricio Pochettino,true
+JPN,Japón,Japan Football Association (JFA),AFC,18,2026-06-11,Hajime Moriyasu,true
+SUI,Suiza,Association Suisse de Football (ASF/SFV),UEFA,19,2026-06-11,Murat Yakin,true
+IRN,Irán,Football Federation Islamic Republic of Iran (FFIRI),AFC,20,2026-06-11,Amir Ghalenoei,true
+DEN,Dinamarca,Dansk Boldspil-Union (DBU),UEFA,21,2026-06-11,Kasper Hjulmand,true
+TUR,Turquía,Türkiye Futbol Federasyonu (TFF),UEFA,22,2026-06-11,Vincenzo Montella,true
+ECU,Ecuador,Federación Ecuatoriana de Fútbol (FEF),CONMEBOL,23,2026-06-11,Vacante,true
+AUT,Austria,Österreichischer Fußball-Bund (ÖFB),UEFA,24,2026-06-11,Ralf Rangnick,true
+KOR,Corea del Sur,Korea Football Association (KFA),AFC,25,2026-06-11,Vacante,true
+NGA,Nigeria,Nigeria Football Federation (NFF),CAF,26,2026-06-11,Éric Chelle,true
+AUS,Australia,Football Australia,AFC,27,2026-06-11,Tony Popovic,true
+ALG,Argelia,Fédération Algérienne de Football (FAF),CAF,28,2026-06-11,Vladimir Petković,true
+EGY,Egipto,Egyptian Football Association (EFA),CAF,29,2026-06-11,Hossam Hassan,true
+CAN,Canadá,Canada Soccer,CONCACAF,30,2026-06-11,Jesse Marsch,true
+NOR,Noruega,Norges Fotballforbund (NFF),UEFA,31,2026-06-11,Ståle Solbakken,true
+UKR,Ucrania,Ukrainian Association of Football (UAF),UEFA,32,2026-06-11,Serhiy Rebrov,true
+CIV,Costa de Marfil,Fédération Ivoirienne de Football (FIF),CAF,33,2026-06-11,Emerse Faé,true
+PAN,Panamá,Federación Panameña de Fútbol (FEPAFUT),CONCACAF,34,2026-06-11,Thomas Christiansen,true
+RUS,Rusia,Russian Football Union (RFU),UEFA,35,2026-06-11,Valery Karpin,false
+POL,Polonia,Polski Związek Piłki Nożnej (PZPN),UEFA,36,2026-06-11,Michał Probierz,true
+WAL,Gales,Football Association of Wales (FAW),UEFA,37,2026-06-11,Craig Bellamy,true
+SWE,Suecia,Svenska Fotbollförbundet (SvFF),UEFA,38,2026-06-11,Jon Dahl Tomasson,true
+HUN,Hungría,Magyar Labdarúgó-szövetség (MLSZ),UEFA,39,2026-06-11,Marco Rossi,true
+CZE,República Checa,Fotbalová asociace České republiky (FAČR),UEFA,40,2026-06-11,Miroslav Koubek,true

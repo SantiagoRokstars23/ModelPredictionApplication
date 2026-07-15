@@ -207,18 +207,20 @@ Modelo-Santiago/
 ├── CHANGELOG.md
 │
 ├── docs/
-│   ├── 00-Principios.md
-│   ├── 01-Modelo.md
-│   ├── 02-Variables.md
-│   ├── 03-Algoritmo.md
-│   ├── 04-Base-de-Conocimiento.md
-│   ├── 05-Bankroll.md
-│   ├── 06-Predicciones.md
-│   ├── 07-Auditoria.md
-│   ├── 08-Aprendizaje.md
-│   ├── 09-Versionado.md
-│   ├── 10-Roadmap.md
-│   └── 11-Glosario.md
+│   ├── 00-Project-Tracker.md
+│   ├── 01-Principios.md
+│   ├── 02-Modelo.md
+│   ├── 03-Variables.md
+│   ├── 04-Algoritmo.md
+│   ├── 05-Base-de-Conocimiento.md
+│   ├── 06-Flujo-Operacional.md
+│   ├── 07-Bankroll.md
+│   ├── 08-Predicciones.md
+│   ├── 09-Auditoria.md
+│   ├── 10-Aprendizaje.md
+│   ├── 11-Versionado.md
+│   ├── 12-Roadmap.md
+│   └── 13-Glosario.md
 │
 ├── engine/
 │   ├── 01-Offensive-Strength.md
@@ -270,11 +272,13 @@ Modelo-Santiago/
 Antes de realizar cualquier modificación debes revisar, en este orden:
 
 1. CLAUDE.md
-2. docs/01-Modelo.md
-3. docs/02-Variables.md
-4. docs/03-Algoritmo.md
-5. engine/
-6. CHANGELOG.md
+2. docs/00-Project-Tracker.md
+3. docs/02-modelo.md
+4. docs/03-Variables.md
+5. docs/04-Algoritmo.md
+6. docs/06-Flujo-Operacional.md
+7. engine/
+8. CHANGELOG.md
 
 Si existe conflicto entre documentos, deberá prevalecer el de mayor prioridad.
 
@@ -445,8 +449,66 @@ Al operar en este repositorio, ten en cuenta las siguientes diferencias entre la
 - `models/` no tiene aún la subcarpeta `research/`. Los documentos existentes (`poisson.md`, `elo.md`, `expected-value.md`, `confidence.md`, `offensive-strength.md`, `defensive-strength.md`) siguen el estándar de 8 secciones definido arriba.
 - Las carpetas `data/raw/`, `data/processed/`, `data/predictions/`, `data/results/`, `data/audit/` y `data/archive/` existen pero solo contienen archivos de marcador de posición (sin datos reales todavía); no asumas que hay datos utilizables hasta confirmarlo.
 - `.claude/agents/` contiene seis agentes activos: `orchestrator.md`, `predictor.md`, `statistician.md`, `odds-analyzer.md`, `bankroll-manager.md` y `auditor.md`. No existe todavía `.claude/commands/`.
-- Los nombres de archivo en `docs/` usan una numeración consecutiva (00 a 11) que ya coincide con el árbol objetivo, pero con variaciones de mayúsculas/minúsculas respecto al árbol de ejemplo (p. ej. `00-principios.md`, `01-modelo.md` en minúsculas).
+- Los nombres de archivo en `docs/` usan una numeración consecutiva (00 a 13) que ya coincide con el árbol objetivo, pero con variaciones de mayúsculas/minúsculas respecto al árbol de ejemplo (p. ej. `01-principios.md`, `02-modelo.md` en minúsculas). `docs/06-Flujo-Operacional.md` se agregó en la Misión 004 (desplazando entonces `06-Backroll.md`→`12-Glosario.md` una posición); `docs/00-Project-Tracker.md` se agregó en la Misión 005, desplazando todo lo demás una posición adicional (`01-principios.md` a `13-Glosario.md`).
 
 Antes de crear un archivo que la documentación da por existente (CHANGELOG.md, scripts, subcarpetas de `models/research/`, etc.), confirma primero si ya existe; si no, créalo siguiendo los estándares ya definidos en este documento en lugar de asumir una estructura distinta.
 
 Este juramento constituye el compromiso operativo del agente con la arquitectura del Modelo Santiago y garantiza un comportamiento consistente entre todos los especialistas del sistema.
+
+
+
+# Principio de Justificación de Datos
+
+Toda entidad, archivo o campo incorporado a la Base de Conocimiento deberá justificar su existencia.
+
+Antes de agregar cualquier información, deberán responderse las siguientes preguntas:
+
+1. ¿Qué componente del Modelo Santiago utilizará este dato?
+2. ¿Qué variable(s) del modelo dependen de él?
+3. ¿Cómo mejora la calidad de las predicciones?
+4. ¿Puede obtenerse a partir de otro dato ya existente?
+5. ¿Debe almacenarse permanentemente o calcularse durante la ejecución?
+
+Si un dato no aporta valor directo o indirecto al proceso de predicción, no deberá formar parte de la versión actual del modelo.
+
+El objetivo del Modelo Santiago no es construir la base de datos de fútbol más completa, sino la base de conocimiento más útil para generar predicciones probabilísticas.
+
+Por lo tanto, se seguirán siempre estos principios:
+
+- Calidad sobre cantidad.
+- Información útil sobre información interesante.
+- Simplicidad sobre complejidad.
+- Una única fuente de verdad para cada dato.
+- Toda entidad deberá tener una única responsabilidad.
+
+Ningún dato podrá incorporarse únicamente "por si acaso". Todo dato deberá tener una razón técnica claramente documentada.
+
+
+# Principio de Desarrollo Incremental
+
+El Modelo Santiago se desarrollará mediante iteraciones pequeñas y auditables.
+
+Ningún módulo deberá construirse completamente en su primera implementación.
+
+Cada componente seguirá el siguiente ciclo:
+
+Diseño
+↓
+
+Implementación mínima funcional
+
+↓
+
+Auditoría
+
+↓
+
+Correcciones
+
+↓
+
+Ampliación
+
+Siempre se priorizará validar la arquitectura antes de ampliar el volumen de datos.
+
+El objetivo es minimizar retrabajos y garantizar la calidad del conocimiento almacenado.

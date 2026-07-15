@@ -17,7 +17,7 @@ El objetivo del proyecto no es adivinar resultados, sino construir un modelo est
 5. Si el modelo recomienda no apostar, no se apuesta.
 6. El objetivo es maximizar el ROI, no acertar un partido.
 
-Ver detalle en [`docs/00-principios.md`](docs/00-principios.md).
+Ver detalle en [`docs/01-principios.md`](docs/01-principios.md).
 
 ---
 
@@ -35,6 +35,7 @@ ModelPredictionApplication/
 ├── docs/                  # Documentación funcional del modelo
 ├── engine/                # Motores lógicos de predicción
 ├── models/                # Investigación matemática y estadística
+├── learning/              # Aprendizaje continuo: análisis de errores y recalibración
 ├── prompts/               # Plantillas reutilizables para tareas específicas
 │
 └── data/                  # Base de conocimiento del modelo
@@ -52,18 +53,20 @@ ModelPredictionApplication/
 
 | Documento | Contenido |
 |---|---|
-| [`00-principios.md`](docs/00-principios.md) | Principios rectores del modelo |
-| [`01-modelo.md`](docs/01-modelo.md) | Descripción general del Modelo Santiago |
-| [`02-Variables.md`](docs/02-Variables.md) | Variables utilizadas por el modelo |
-| [`03-Algoritmo.md`](docs/03-Algoritmo.md) | Algoritmo de predicción |
-| [`04-Base-de-Conocimiento.md`](docs/04-Base-de-Conocimiento.md) | Arquitectura de datos |
-| [`05-Backroll.md`](docs/05-Backroll.md) | Gestión de bankroll |
-| [`06-predicciones.md`](docs/06-predicciones.md) | Formato y ejemplos de predicciones |
-| [`07-Auditoria.md`](docs/07-Auditoria.md) | Métricas de auditoría (ROI, Yield) |
-| [`08-aprendizaje.md`](docs/08-aprendizaje.md) | Aprendizaje y recalibración del modelo |
-| [`09-Versiones.md`](docs/09-Versiones.md) | Historial de versiones del modelo |
-| [`10-Roadmap.md`](docs/10-Roadmap.md) | Hoja de ruta del proyecto |
-| [`11-Glosario.md`](docs/11-Glosario.md) | Glosario de términos (xG, ROI, Yield, etc.) |
+| [`00-Project-Tracker.md`](docs/00-Project-Tracker.md) | Seguimiento oficial del estado de todas las misiones del proyecto |
+| [`01-principios.md`](docs/01-principios.md) | Principios rectores del modelo |
+| [`02-modelo.md`](docs/02-modelo.md) | Descripción general del Modelo Santiago |
+| [`03-Variables.md`](docs/03-Variables.md) | Variables utilizadas por el modelo |
+| [`04-Algoritmo.md`](docs/04-Algoritmo.md) | Algoritmo de predicción |
+| [`05-Base-de-Conocimiento.md`](docs/05-Base-de-Conocimiento.md) | Arquitectura de datos |
+| [`06-Flujo-Operacional.md`](docs/06-Flujo-Operacional.md) | Flujo de ejecución completo del modelo |
+| [`07-Backroll.md`](docs/07-Backroll.md) | Gestión de bankroll |
+| [`08-predicciones.md`](docs/08-predicciones.md) | Formato y ejemplos de predicciones |
+| [`09-Auditoria.md`](docs/09-Auditoria.md) | Métricas de auditoría (ROI, Yield) |
+| [`10-aprendizaje.md`](docs/10-aprendizaje.md) | Aprendizaje y recalibración del modelo |
+| [`11-Versiones.md`](docs/11-Versiones.md) | Historial de versiones del modelo |
+| [`12-Roadmap.md`](docs/12-Roadmap.md) | Hoja de ruta del proyecto |
+| [`13-Glosario.md`](docs/13-Glosario.md) | Glosario de términos (xG, ROI, Yield, etc.) |
 
 ### engine/ — Motores de predicción
 
@@ -90,6 +93,19 @@ Documenta el respaldo estadístico/matemático de cada componente del engine, si
 - [`defensive-strength.md`](models/defensive-strength.md)
 
 **Ningún motor puede incorporar fórmulas, variables o algoritmos nuevos sin una investigación previa documentada aquí.**
+
+### learning/ — Aprendizaje continuo
+
+Analiza el historial de predicciones ya resueltas para generar conocimiento auditable. Nunca calcula probabilidades, nunca predice y nunca modifica `data/`; solo lee predicciones/resultados cerrados y produce diagnósticos, patrones y propuestas de ajuste para revisión humana.
+
+| Documento | Responsabilidad |
+|---|---|
+| [`README.md`](learning/README.md) | Marco general, límites del módulo y pipeline completo |
+| [`error-analysis.md`](learning/error-analysis.md) | Diagnóstico de acierto/error partido a partido |
+| [`pattern-discovery.md`](learning/pattern-discovery.md) | Sesgos recurrentes a través de múltiples partidos |
+| [`confidence-calibration.md`](learning/confidence-calibration.md) | Verifica si el Índice de Confianza declarado es honesto |
+| [`weight-adjustment.md`](learning/weight-adjustment.md) | Propuesta documentada de recalibración de pesos (nunca la aplica) |
+| [`version-history.md`](learning/version-history.md) | Registro auditable de qué cambió entre versiones y por qué |
 
 ### prompts/ — Plantillas de tareas
 
@@ -131,11 +147,13 @@ Cada agente tiene una única responsabilidad y termina con un "Juramento del Age
 Antes de realizar cualquier modificación, revisar en este orden:
 
 1. `CLAUDE.md`
-2. `docs/01-modelo.md`
-3. `docs/02-Variables.md`
-4. `docs/03-Algoritmo.md`
-5. `engine/`
-6. `CHANGELOG.md`
+2. `docs/00-Project-Tracker.md`
+3. `docs/02-modelo.md`
+4. `docs/03-Variables.md`
+5. `docs/04-Algoritmo.md`
+6. `docs/06-Flujo-Operacional.md`
+7. `engine/`
+8. `CHANGELOG.md`
 
 Si existe conflicto entre documentos, prevalece el de mayor prioridad.
 
@@ -157,13 +175,13 @@ Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.m
 
 ## Estado actual
 
-Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, salvo el primer módulo de datos ya diseñado en [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md) (esquema aprobado, sin datos reales todavía). `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md).
+Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, salvo el primer módulo de datos ya diseñado en [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md) (esquema aprobado, sin datos reales todavía). `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
 
 ## Licencia
 
 Software y documentación propietarios. Todos los derechos reservados — ver [`LICENSE`](LICENSE).
 
-Consultar [`docs/10-Roadmap.md`](docs/10-Roadmap.md) para la hoja de ruta.
+Consultar [`docs/12-Roadmap.md`](docs/12-Roadmap.md) para la hoja de ruta.
 
 ---
 

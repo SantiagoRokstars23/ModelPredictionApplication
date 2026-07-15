@@ -273,8 +273,8 @@ Cada conjunto de datos deberá indicar:
 
 Todo campo definido en cualquier entidad de la Base de Conocimiento deberá poder justificarse mediante al menos una de las siguientes razones:
 
-- Es insumo directo de una variable definida en `docs/02-Variables.md`.
-- Es insumo directo de un paso del algoritmo definido en `docs/03-Algoritmo.md`.
+- Es insumo directo de una variable definida en `docs/03-Variables.md`.
+- Es insumo directo de un paso del algoritmo definido en `docs/04-Algoritmo.md`.
 - Es insumo directo de un motor definido en `engine/`.
 - Es necesario para garantizar integridad referencial, trazabilidad o auditabilidad del dato (identificadores, fechas de vigencia, fuente).
 

@@ -10,7 +10,7 @@
 
 # Objetivo
 
-Este módulo constituye la primera implementación de la Base de Conocimiento (`docs/04-Base-de-Conocimiento.md`) para el dominio de selecciones nacionales de fútbol.
+Este módulo constituye la primera implementación de la Base de Conocimiento (`docs/05-Base-de-Conocimiento.md`) para el dominio de selecciones nacionales de fútbol.
 
 Define 11 entidades, cada una en su propio archivo CSV, siguiendo el esquema aprobado en la Misión 001.
 
@@ -18,7 +18,7 @@ Define 11 entidades, cada una en su propio archivo CSV, siguiendo el esquema apr
 
 # Decisiones arquitectónicas aplicadas
 
-1. **Principio de Justificación de Datos**: cada campo de cada entidad está justificado explícitamente en este documento (ver tablas por entidad), conforme a `docs/04-Base-de-Conocimiento.md`.
+1. **Principio de Justificación de Datos**: cada campo de cada entidad está justificado explícitamente en este documento (ver tablas por entidad), conforme a `docs/05-Base-de-Conocimiento.md`.
 2. **Ubicación**: se mantiene `data/processed/selecciones-nacionales/`.
 3. **`campeon_id_seleccion` eliminado** de `torneos`: es un dato derivado (se obtiene consultando el partido con `fase = final` en `partidos.csv`), nunca se almacena para evitar duplicación.
 4. **Sin estadísticas individuales de jugador** en esta misión (goles, asistencias, minutos jugados por jugador y partido). Queda explícitamente diferido a una misión futura.
@@ -56,12 +56,12 @@ Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo
 | Campo | Tipo | Clave | Justificación |
 |---|---|---|---|
 | `id_seleccion` | STRING(3) | PK | Integridad referencial: identificador único usado por todas las entidades relacionadas |
-| `nombre_pais` | STRING | | Identificación legible del equipo en reportes de predicción (`docs/06-predicciones.md`) |
-| `nombre_federacion` | STRING | | Trazabilidad de la fuente oficial (`docs/04-Base-de-Conocimiento.md`: "toda fuente deberá ser identificable y verificable") |
-| `confederacion` | ENUM | | Contextualiza viajes intercontinentales (Factores Externos, `docs/02-Variables.md`) y agrupación de clasificatorias |
+| `nombre_pais` | STRING | | Identificación legible del equipo en reportes de predicción (`docs/08-predicciones.md`) |
+| `nombre_federacion` | STRING | | Trazabilidad de la fuente oficial (`docs/05-Base-de-Conocimiento.md`: "toda fuente deberá ser identificable y verificable") |
+| `confederacion` | ENUM | | Contextualiza viajes intercontinentales (Factores Externos, `docs/03-Variables.md`) y agrupación de clasificatorias |
 | `ranking_fifa_actual` | INTEGER | | Proxy de fuerza general, usado como prior en `engine/03-Poisson.md` y `engine/05-Confidence.md` |
-| `ranking_fifa_fecha` | DATE | | Vigencia del dato (`docs/04-Base-de-Conocimiento.md`: "Calidad de Datos → fecha de actualización") |
-| `seleccionador_actual` | STRING | | Insumo cualitativo de Compatibilidad Táctica (Variable 005, `docs/02-Variables.md`) |
+| `ranking_fifa_fecha` | DATE | | Vigencia del dato (`docs/05-Base-de-Conocimiento.md`: "Calidad de Datos → fecha de actualización") |
+| `seleccionador_actual` | STRING | | Insumo cualitativo de Compatibilidad Táctica (Variable 005, `docs/03-Variables.md`) |
 | `activa` | BOOLEAN | | Integridad del modelo: excluye federaciones inactivas de la predicción |
 
 **Relaciones:** referenciada por `jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`.
@@ -119,7 +119,7 @@ Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo
 | `hora_local` | STRING | | Insumo secundario de Factores Externos (calor/humedad según franja horaria) |
 | `fase` | ENUM | | Insumo de Índice de Caos (`engine/04-Chaos-Index.md`) y Estado Psicológico |
 | `jornada` | INTEGER | | Contextualiza Rendimiento en el Torneo |
-| `goles_local` | INTEGER | | Resultado oficial, base de `docs/07-Auditoria.md` |
+| `goles_local` | INTEGER | | Resultado oficial, base de `docs/09-Auditoria.md` |
 | `goles_visitante` | INTEGER | | Idem |
 | `estado_partido` | ENUM | | Filtra partidos válidos para el cálculo de variables |
 | `asistencia` | INTEGER | | Insumo secundario de Estado Psicológico/presión ambiental |
@@ -229,7 +229,7 @@ Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo
 | `id_competicion` | STRING | PK | Integridad referencial |
 | `nombre` | STRING | | Trazabilidad/legibilidad |
 | `confederacion_organizadora` | ENUM | | Contextualiza el nivel de exigencia esperado |
-| `tipo` | ENUM | | Insumo directo de Índice de Caos y de la ponderación por tipo de partido (`docs/01-modelo.md`, Niveles A-D) |
+| `tipo` | ENUM | | Insumo directo de Índice de Caos y de la ponderación por tipo de partido (`docs/02-modelo.md`, Niveles A-D) |
 | `periodicidad_anios` | INTEGER | | Contextualiza relevancia competitiva (vacío si `tipo = amistoso`) |
 | `activa` | BOOLEAN | | Filtra competiciones vigentes |
 
@@ -259,4 +259,4 @@ Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo
 # Próximos pasos (fuera de esta misión)
 
 - Misión futura: estadísticas individuales de jugador por partido (goles, asistencias, minutos jugados, tarjetas), explícitamente diferida por decisión de esta misión.
-- Incorporación de datos reales validados desde `data/raw/` siguiendo el flujo de `docs/04-Base-de-Conocimiento.md`.
+- Incorporación de datos reales validados desde `data/raw/` siguiendo el flujo de `docs/05-Base-de-Conocimiento.md`.

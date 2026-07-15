@@ -40,7 +40,7 @@ El objetivo del motor es medir la capacidad defensiva sostenible del equipo.
 
 # Entradas
 
-El motor utilizará información proveniente de las variables oficiales definidas en `docs/02-Variables.md`.
+El motor utilizará información proveniente de las variables oficiales definidas en `docs/03-Variables.md`.
 
 ## Variables Primarias
 
@@ -163,7 +163,7 @@ El motor nunca deberá:
 
 Este motor depende de:
 
-- docs/02-Variables.md
+- docs/03-Variables.md
 
 Será utilizado por:
 
