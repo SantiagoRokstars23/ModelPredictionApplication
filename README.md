@@ -157,7 +157,7 @@ Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.m
 
 ## Estado actual
 
-Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, sin datos reales todavía. `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md).
+Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, salvo el primer módulo de datos ya diseñado en [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md) (esquema aprobado, sin datos reales todavía). `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Licencia
 
@@ -170,3 +170,31 @@ Consultar [`docs/10-Roadmap.md`](docs/10-Roadmap.md) para la hoja de ruta.
 ## Objetivo
 
 Construir el sistema probabilístico de predicción deportiva más consistente, transparente y mantenible posible, priorizando siempre la calidad del modelo sobre la velocidad de desarrollo.
+
+
+# Principio de Justificación de Datos
+
+Todo dato almacenado dentro de la Base de Conocimiento deberá justificar su existencia.
+
+Antes de incorporar un nuevo campo o una nueva entidad, deberá responderse obligatoriamente las siguientes preguntas:
+
+1. ¿Qué variable(s) del Modelo Santiago utilizan este dato?
+2. ¿Cómo mejora la precisión de las predicciones?
+3. ¿Puede obtenerse a partir de otro dato ya existente?
+4. ¿Es información permanente o información temporal?
+5. ¿Pertenece realmente a la Base de Conocimiento o debe calcularse durante la ejecución del modelo?
+
+Si un dato no aporta valor directo o indirecto al cálculo de probabilidades, no deberá formar parte de la versión 1.0.
+
+El objetivo del Modelo Santiago no es construir una base de datos completa de fútbol.
+
+El objetivo es almacenar únicamente la información necesaria para maximizar la calidad de las predicciones.
+
+Se priorizarán:
+
+- Calidad sobre cantidad.
+- Información útil sobre información interesante.
+- Datos necesarios sobre datos decorativos.
+- Simplicidad sobre complejidad.
+
+Todo campo deberá tener una razón de existir.

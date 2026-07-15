@@ -269,6 +269,21 @@ Cada conjunto de datos deberá indicar:
 
 ---
 
+# Principio de Justificación de Datos
+
+Todo campo definido en cualquier entidad de la Base de Conocimiento deberá poder justificarse mediante al menos una de las siguientes razones:
+
+- Es insumo directo de una variable definida en `docs/02-Variables.md`.
+- Es insumo directo de un paso del algoritmo definido en `docs/03-Algoritmo.md`.
+- Es insumo directo de un motor definido en `engine/`.
+- Es necesario para garantizar integridad referencial, trazabilidad o auditabilidad del dato (identificadores, fechas de vigencia, fuente).
+
+Ningún campo podrá incorporarse a una entidad si no puede justificarse mediante al menos una de estas razones.
+
+Este principio extiende la regla general "Nunca modificar una variable sin justificar el cambio" (`CLAUDE.md`) al diseño de la Base de Conocimiento: toda incorporación, eliminación o modificación de un campo deberá quedar justificada y registrada en `CHANGELOG.md`.
+
+---
+
 # Reglas
 
 El Modelo Santiago nunca deberá:
@@ -278,6 +293,7 @@ El Modelo Santiago nunca deberá:
 - Eliminar historial.
 - Utilizar datos sin validar.
 - Mezclar competiciones incompatibles.
+- Incorporar campos a una entidad sin justificación documentada (ver Principio de Justificación de Datos).
 
 ---
 
