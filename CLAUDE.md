@@ -207,7 +207,7 @@ Modelo-Santiago/
 ├── CHANGELOG.md
 │
 ├── docs/
-│   ├── 00-Reglas.md
+│   ├── 00-Principios.md
 │   ├── 01-Modelo.md
 │   ├── 02-Variables.md
 │   ├── 03-Algoritmo.md
@@ -428,5 +428,25 @@ Esta separación garantiza una arquitectura modular, mantenible y escalable.
 ## Comportamiento de los Agentes
 
 Todo agente definido en `.claude/agents/` deberá finalizar con un "Juramento del Agente".
+
+Este juramento constituye el compromiso operativo del agente con la arquitectura del Modelo Santiago y garantiza un comportamiento consistente entre todos los especialistas del sistema.
+
+---
+
+# Estado Actual del Repositorio
+
+Este proyecto es, por diseño, un repositorio de documentación y prompts (Markdown) para agentes de Claude Code. No contiene código fuente ejecutable, por lo que no existen comandos de build, lint ni test que ejecutar.
+
+Al operar en este repositorio, ten en cuenta las siguientes diferencias entre la estructura objetivo descrita arriba y el estado real actual:
+
+- No existen aún `CHANGELOG.md` ni `LICENSE` en la raíz, aunque `CLAUDE.md` los referencia como obligatorios. Antes de registrar una mejora en el CHANGELOG, verifica si el archivo ya fue creado.
+- No existen las carpetas `scripts/` ni `excel/` todavía.
+- `engine/*.md` contiene un único documento por motor; la separación formal en "v1.0 Arquitectura" y "v2.0 Implementación matemática" no está aplicada todavía como estructura de archivos (son secciones a futuro).
+- `models/` no tiene aún la subcarpeta `research/`. Los documentos existentes (`poisson.md`, `elo.md`, `expected-value.md`, `confidence.md`, `offensive-strength.md`, `defensive-strength.md`) siguen el estándar de 8 secciones definido arriba.
+- Las carpetas `data/raw/`, `data/processed/`, `data/predictions/`, `data/results/`, `data/audit/` y `data/archive/` existen pero solo contienen archivos de marcador de posición (sin datos reales todavía); no asumas que hay datos utilizables hasta confirmarlo.
+- `.claude/agents/` contiene seis agentes activos: `orchestrator.md`, `predictor.md`, `statistician.md`, `odds-analyzer.md`, `bankroll-manager.md` y `auditor.md`. No existe todavía `.claude/commands/`.
+- Los nombres de archivo en `docs/` usan una numeración consecutiva (00 a 11) que ya coincide con el árbol objetivo, pero con variaciones de mayúsculas/minúsculas respecto al árbol de ejemplo (p. ej. `00-principios.md`, `01-modelo.md` en minúsculas).
+
+Antes de crear un archivo que la documentación da por existente (CHANGELOG.md, scripts, subcarpetas de `models/research/`, etc.), confirma primero si ya existe; si no, créalo siguiendo los estándares ya definidos en este documento en lugar de asumir una estructura distinta.
 
 Este juramento constituye el compromiso operativo del agente con la arquitectura del Modelo Santiago y garantiza un comportamiento consistente entre todos los especialistas del sistema.
