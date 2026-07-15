@@ -11,6 +11,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Added
 
 - `README.md`: se documenta el propósito del proyecto, la filosofía y principios, la estructura completa del repositorio (`docs/`, `engine/`, `models/`, `prompts/`, `.claude/agents/`, `data/`), el flujo de trabajo de una predicción, el orden de lectura recomendado, las reglas del proyecto y el estado actual del repositorio.
+- `LICENSE`: se establece licencia propietaria (todos los derechos reservados) a nombre de Santiago Grueso, dado el potencial valor comercial del modelo (ROI en mercados de apuestas).
 
 ---
 

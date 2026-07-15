@@ -46,7 +46,7 @@ ModelPredictionApplication/
     └── archive/            # Información histórica (nunca se elimina)
 ```
 
-> `LICENSE`, `scripts/` y `excel/` forman parte de la arquitectura objetivo pero todavía no existen en este repositorio. Antes de asumir que existen, verifica el estado real del directorio.
+> `scripts/` y `excel/` forman parte de la arquitectura objetivo pero todavía no existen en este repositorio. Antes de asumir que existen, verifica el estado real del directorio.
 
 ### docs/ — Reglas y filosofía del modelo
 
@@ -157,7 +157,11 @@ Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.m
 
 ## Estado actual
 
-Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, sin datos reales todavía. `LICENSE`, `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md).
+Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, sin datos reales todavía. `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md).
+
+## Licencia
+
+Software y documentación propietarios. Todos los derechos reservados — ver [`LICENSE`](LICENSE).
 
 Consultar [`docs/10-Roadmap.md`](docs/10-Roadmap.md) para la hoja de ruta.
 
