@@ -29,7 +29,7 @@ Es un documento **vivo**: deberá actualizarse cada vez que se inicie, avance o 
 
 # Resumen general del proyecto
 
-**Porcentaje global de avance:** ~72%
+**Porcentaje global de avance:** ~76%
 
 **Veredicto de Architecture Freeze:** No declarable todavía, pero de las 5 críticas originales de AR-002 ya quedan **4 resueltas** (INC-18/INC-21 por GR-002; INC-01 por MR-003; INC-04 completamente resuelto por la implementación de MR-004). Solo queda **INC-05**, y solo en su implementación completa — el principio arquitectónico ya está fijado (las cuotas nunca serán una Variable Oficial), pero `engine/06` todavía lee `cuotas.csv` directamente en espera del futuro Contrato de Datos de Mercado. De los 7 criterios objetivos de `docs/23` (Parte 6), se mantiene formalmente en **4 de 7** (el criterio 5, "ningún motor accede a `data/processed/` directamente", sigue sin cumplirse por esta única excepción ya documentada) — pero el criterio 1 ("cero críticas sin resolver") está a un solo paso de cumplirse. Próximo paso: diseñar el Contrato de Datos de Mercado (cierra INC-05 del todo), resolver INC-06 (Rotaciones), y `GR-003` (`data/README.md`).
 
@@ -72,6 +72,9 @@ Es un documento **vivo**: deberá actualizarse cada vez que se inicie, avance o 
 - **Catálogo de Variables Derivadas** (`docs/28-Catalogo-de-Variables-Derivadas.md`, `DATA-002`): 27 cantidades calculadas centralizadas en 6 categorías; revela que solo 2 alcanzan el estado "Diseñada" completo.
 - **Segunda investigación matemática real** (`models/defensive-strength.md`, `MODEL-002`): reutiliza deliberadamente `M_forma`/`Pen` de `MODEL-001` para no duplicar variables compartidas; su término base no tiene ningún componente bloqueado, a diferencia de Offensive Strength.
 - **Núcleo probabilístico completo** (`models/poisson.md`, `MODEL-003`): define por primera vez el mecanismo matemático exacto detrás de Probabilidad Local/Empate/Visitante y Top 4 de marcadores; documenta explícitamente por qué V1 no adopta la corrección de Dixon-Coles.
+- **Índice de Confianza formalizado** (`models/confidence.md`, `MODEL-004`): distingue Probabilidad (aleatoria) de Confianza (epistémica); corrige un error del stub anterior que introducía una dependencia incompatible con la ejecución en paralelo del Engine.
+- **Índice de Caos formalizado** (`models/chaos-index.md`, `MODEL-005`): primer documento de `models/` creado desde cero (`engine/04` nunca tuvo respaldo); usa entropía de Shannon sobre la distribución ya calculada por Poisson.
+- **Núcleo matemático estructuralmente completo para los 6 motores** (`models/expected-value.md`, `MODEL-006`): fórmula `EV = (P_modelo · c) − 1`, derivada desde primeros principios; distingue Probabilidad → Expected Value → Gestión de Bankroll (Kelly queda fuera de alcance, pertenece a `engine/07` futuro); resuelve que `EV` es puro y `Recomendación` es donde se integran Confianza y Caos. Último de los 6 motores en obtener respaldo de investigación — condicionado, en su lado de mercado, al Contrato de Datos de Mercado (`INC-05`) todavía pendiente.
 
 ## Módulos en desarrollo
 
@@ -505,6 +508,36 @@ Serie independiente de las demás, iniciada en DATA-001. Una misión `DATA-` cru
 - **Fecha de finalización:** 2026-07-17
 - **Observaciones:** Desarrolla el núcleo probabilístico: `λ` como combinación multiplicativa cruzada (ataque propio × defensa rival, nunca la propia) más ajuste de Localía — estructura de Maher (1982). Documenta explícitamente que la corrección de Dixon-Coles (1997) para marcadores bajos no se adopta en V1 por falta de historial para estimar `ρ`. Define por primera vez el mecanismo exacto detrás de "Probabilidad Local/Empate/Visitante" y "Top 4 de marcadores", que `docs/06`/`14`/`25`/`26` exigían sin definir cómo se calculaban: se derivan de una única matriz de probabilidades conjuntas. Ningún parámetro numérico fijado.
 - **Próxima misión recomendada:** `models/chaos-index.md` o `models/confidence.md` — ambos pueden desarrollarse ahora que Poisson define su entrada principal, sin depender uno del otro.
+
+## MODEL-004 — Modelo Matemático de Confidence
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura; coeficientes pendientes de calibración)
+- **Dependencias:** MODEL-001, MODEL-002, MODEL-003, `engine/05`, `docs/17`, `docs/28` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Corrige un error detectado en el stub anterior (listaba "Índice de Caos" como entrada — incompatible con la ejecución en paralelo de `engine/04`/`05` en Capa 3). Distingue formalmente Probabilidad (incertidumbre aleatoria) de Confianza (incertidumbre epistémica), fundamentado en literatura real (Der Kiureghian y Ditlevsen 2009; Gneiting et al. 2007). Reutiliza Variable006/007 por tercera vez consecutiva (`engine/01`, `02`, ahora `05`) sin duplicar su cálculo. Confirma que la escala cualitativa ya tiene bandas numéricas en `docs/02-modelo.md` — no inventa umbrales nuevos. Documenta, sin resolver, la superposición conceptual con el factor "equipos parejos" de `engine/04`. Ningún peso fijado.
+- **Próxima misión recomendada:** `models/chaos-index.md` — completa la Capa 3, y permite revisar formalmente la superposición conceptual ya señalada con Confidence.
+
+## MODEL-005 — Modelo Matemático del Chaos Index
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura; coeficientes pendientes de calibración)
+- **Dependencias:** MODEL-001, MODEL-002, MODEL-003, MODEL-004, `engine/04`, `docs/17`, `docs/28` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Primer documento de `models/` creado desde cero (no evoluciona un stub) — `engine/04` nunca tuvo respaldo de investigación desde el diseño original, verificado directamente en el directorio. Propone `Base_Caos` = entropía de Shannon normalizada de la distribución de `engine/03`, reutilizada sin recalcular, ajustada aditivamente por Variable001/006/007/012. Comparte variables con `MODEL-004` pero con tratamiento matemático distinto (aditivo vs. multiplicativo) — documentado como solapamiento conocido, no resuelto. Detecta que la categoría "Información" de `engine/04` (datos incompletos, cambios de entrenador) no tiene componente matemático hoy, por falta de Variable Oficial activa que la represente. Concluye explícitamente que `engine/06` **no puede construirse completamente todavía**: falta el Contrato de Datos de Mercado (`INC-05`). Ningún peso fijado.
+- **Próxima misión recomendada:** `models/expected-value.md` — con Poisson, Confidence y Chaos completos, es el último de los 6 motores; su fundamento de rendimiento deportivo ya está listo, aunque su lado de mercado (cuotas) seguirá pendiente hasta que exista el Contrato de Datos de Mercado.
+
+## MODEL-006 — Modelo Matemático del Expected Value
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura; coeficientes de la Recomendación y Contrato de Datos de Mercado pendientes)
+- **Dependencias:** MODEL-001, MODEL-002, MODEL-003, MODEL-004, MODEL-005, `engine/06`, `docs/17`, `docs/28` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Último de los 6 motores del Engine en obtener respaldo de investigación en `models/`. Deriva `EV = (P_modelo · c) − 1` desde primeros principios de valor esperado; formaliza `P_implícita = 1/c` (ya declarada en el Paso 3 del "Flujo del Motor" de `engine/06`) y documenta, como refinamiento de Versión 2.0, la normalización por margen de la casa (overround). Distingue formalmente Probabilidad (`engine/03`) → Expected Value (este motor) → Gestión de Bankroll (`engine/07`, futuro) — el Criterio de Kelly (Kelly, 1956) queda fuera de alcance conceptual, pertenece al tercer eslabón. Resuelve, con evidencia textual de la propia sección "Salida" de `engine/06`, que `EV` debe ser una función pura de `P_modelo` y cuota, mientras que `Recomendación` es el campo donde sí se integran Confianza y Caos, sin modificar el número de EV. Fundamenta con literatura real (Levitt 2004; Miller & Davidow 2019) una nota de prudencia ante EV extremadamente alto y el concepto de Closing Line Value. Corrige una referencia incorrecta del brief ("`docs/26-Trazado-de-Ejecucion-del-Prediction-Pipeline.md`", que mezclaba nombre de `docs/25` con número de `docs/26`). Concluye en su Cierre (pregunta 8) que el núcleo matemático queda **estructuralmente completo** para los 6 motores por primera vez, pero **no calibrado** (ningún peso tiene valor numérico, `data/results/` sigue siendo marcador de posición) ni completamente desacoplado de sus fuentes de datos (`INC-05` sigue pendiente). Ningún peso fijado; no se modifica `engine/06` ni ningún otro documento existente.
+- **Próxima misión recomendada:** Diseñar el Contrato de Datos de Mercado completo (cierra `INC-05` en implementación); resolver `INC-06` (Rotaciones); o iniciar la calibración real de los 6 motores una vez existan datos en `data/results/` — con `MODEL-001` a `006` completos, la investigación estructural del Engine ya no es el bloqueante principal.
 
 ---
 
