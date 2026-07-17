@@ -1,2 +1,12 @@
 id_competicion,nombre,confederacion_organizadora,tipo,periodicidad_anios,activa
 COMP-000001,Amistosos Internacionales,FIFA,amistoso,,true
+COMP-000002,Copa Mundial FIFA,FIFA,mundial,4,true
+COMP-000003,Eliminatorias Mundial FIFA,FIFA,eliminatoria_mundial,4,true
+COMP-000004,Eurocopa,UEFA,continental,4,true
+COMP-000005,UEFA Nations League,UEFA,liga_naciones,2,true
+COMP-000006,Copa América,CONMEBOL,continental,4,true
+COMP-000007,CONCACAF Gold Cup,CONCACAF,continental,2,true
+COMP-000008,Copa Asiática,AFC,continental,4,true
+COMP-000009,Copa Africana de Naciones,CAF,continental,4,true
+COMP-000010,OFC Nations Cup,OFC,continental,4,true
+COMP-000011,Finalissima,CONMEBOL-UEFA,interconfederacion,,true

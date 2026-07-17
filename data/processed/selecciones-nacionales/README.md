@@ -2,9 +2,9 @@
 
 **Directorio:** `data/processed/selecciones-nacionales/`
 
-**Versión:** 1.0.0
+**Versión:** 1.1.0
 
-**Estado:** Activo (esquema aprobado, sin datos reales todavía)
+**Estado:** Activo (esquema aprobado; `selecciones.csv` y `competiciones.csv` poblados con datos reales, resto de entidades pendientes)
 
 ---
 
@@ -45,7 +45,7 @@ Se resuelve de la siguiente forma:
 
 # Estado de los archivos
 
-Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo `competiciones.csv` y `torneos.csv`, que incluyen la fila de referencia de "Amistosos Internacionales" descrita arriba (dato de catálogo/esquema, no dato observacional de un partido concreto). No se ha incorporado ningún dato real de partidos, jugadores ni estadísticas — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
+`selecciones.csv` contiene 40 registros reales (Top 40 FIFA, Misión 002). `competiciones.csv` contiene 11 registros reales: la fila de catálogo `Amistosos Internacionales` (Misión 001) más 10 competiciones internacionales pobladas en la Misión 006. `torneos.csv` conserva únicamente la fila de referencia `TOR-2026-AMISTOSOS` (Misión 001); no se han creado aún ediciones específicas (con fechas y sedes reales) para las 10 competiciones incorporadas en MS-006, lo cual queda diferido a una misión futura. El resto de los CSV de este módulo (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`, `arbitros`, `estadios`) contienen únicamente la fila de encabezado — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
 
 ---
 
@@ -226,14 +226,35 @@ Todos los CSV de este módulo contienen únicamente la fila de encabezado, salvo
 
 | Campo | Tipo | Clave | Justificación |
 |---|---|---|---|
-| `id_competicion` | STRING | PK | Integridad referencial |
-| `nombre` | STRING | | Trazabilidad/legibilidad |
-| `confederacion_organizadora` | ENUM | | Contextualiza el nivel de exigencia esperado |
+| `id_competicion` | STRING | PK | Integridad referencial: identificador único usado por `torneos.id_competicion` |
+| `nombre` | STRING | | Trazabilidad/legibilidad en reportes de predicción |
+| `confederacion_organizadora` | ENUM | | Contextualiza el nivel de exigencia esperado (Variable 011, Estado Psicológico/presión competitiva) y el organismo responsable de la fuente oficial de datos |
 | `tipo` | ENUM | | Insumo directo de Índice de Caos y de la ponderación por tipo de partido (`docs/02-modelo.md`, Niveles A-D) |
-| `periodicidad_anios` | INTEGER | | Contextualiza relevancia competitiva (vacío si `tipo = amistoso`) |
+| `periodicidad_anios` | INTEGER | | Contextualiza relevancia competitiva (vacío si la competición no sigue un ciclo fijo, ej. `tipo = amistoso` o `interconfederacion`) |
 | `activa` | BOOLEAN | | Filtra competiciones vigentes |
 
-**Datos de catálogo incluidos en esta misión:** fila `Amistosos Internacionales` (ver convención dedicada).
+**Restricciones:** `id_competicion` único, formato `COMP-NNNNNN` (6 dígitos); `nombre` único; `periodicidad_anios` > 0 cuando no está vacío.
+
+**Relaciones:** referenciada por `torneos.id_competicion` (FK obligatoria — todo torneo pertenece a exactamente una competición).
+
+**Valores de `confederacion_organizadora` (ENUM):** `FIFA`, `UEFA`, `CONMEBOL`, `CONCACAF`, `AFC`, `CAF`, `OFC` — mismos códigos de confederación usados en `selecciones.csv`. Excepción documentada: `CONMEBOL-UEFA` para competiciones organizadas conjuntamente por dos confederaciones (caso único actual: Finalissima). No se crea un valor genérico "conjunta" para evitar perder trazabilidad de qué organismos específicos participan.
+
+**Valores de `tipo` (ENUM), definidos en esta misión (MS-006):**
+
+| Valor | Significado | Ejemplo |
+|---|---|---|
+| `amistoso` | Partido bilateral sin fase de grupos ni eliminatoria | Amistosos Internacionales |
+| `mundial` | Fase final de la Copa Mundial FIFA | Copa Mundial FIFA |
+| `eliminatoria_mundial` | Proceso clasificatorio hacia la Copa Mundial FIFA, organizado por confederación bajo normativa FIFA | Eliminatorias Mundial FIFA |
+| `continental` | Torneo de selecciones de una única confederación, formato grupos + eliminación directa | Eurocopa, Copa América, CONCACAF Gold Cup, Copa Asiática, Copa Africana de Naciones, OFC Nations Cup |
+| `liga_naciones` | Formato de liga con ascenso/descenso entre divisiones, seguido de una fase final | UEFA Nations League |
+| `interconfederacion` | Partido o serie entre campeones de dos confederaciones distintas, sin ciclo fijo | Finalissima |
+
+**Datos de catálogo incluidos en la Misión 001:** fila `Amistosos Internacionales` (ver convención dedicada).
+
+**Datos poblados en la Misión 006 (MS-006):** 10 competiciones internacionales relevantes para selecciones nacionales (`COMP-000002` a `COMP-000011`), verificadas mediante fuentes públicas ampliamente reconocidas (Wikipedia, UEFA.com, CAF Online, AFC, CONCACAF, CONMEBOL — ver `CHANGELOG.md` para el detalle de fuentes por competición). No se incluyen competiciones de clubes, categorías juveniles ni fútbol femenino — fuera del alcance actual del Modelo Santiago (predicción de partidos de selecciones absolutas masculinas). No se crean aún filas en `torneos.csv` para estas competiciones (ediciones específicas con fechas y sedes) — queda explícitamente diferido a una misión futura, conforme al alcance de MS-006.
+
+**Nota sobre periodicidad variable:** algunas competiciones cambian de ciclo con el tiempo. La Copa Africana de Naciones (CAF) fue bienal hasta su edición 2027 inclusive; CAF anunció en diciembre de 2025 el paso a un ciclo cuatrienal a partir de 2028 para alinearse con la Eurocopa. Se almacena `periodicidad_anios = 4` por representar el ciclo vigente hacia el futuro, dejando esta nota como registro de la transición (evita invocar una migración de esquema para un campo que ya captura el estado más reciente y verificable).
 
 ---
 

@@ -1,6 +1,6 @@
 # Motor de Confianza
 
-**Archivo:** `engine/04-Confidence.md`
+**Archivo:** `engine/05-Confidence.md`
 
 **Versión:** 1.0.0
 
@@ -171,9 +171,9 @@ El motor nunca deberá:
 
 Este motor será utilizado por:
 
-- engine/05-Chaos-Index.md
+- engine/04-Chaos-Index.md
 - engine/06-Expected-Value.md
-- engine/07-Bankroll-Engine.md
+- engine/07-Bankroll-Engine.md *(futuro, no implementado todavía)*
 
 ---
 

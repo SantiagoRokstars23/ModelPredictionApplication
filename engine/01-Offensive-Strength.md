@@ -8,6 +8,16 @@
 
 ---
 
+# Estado del Motor
+
+Arquitectura: ✅ Completa
+
+Matemática: ⏳ Pendiente (Versión 2.0)
+
+Validación Estadística: ⏳ Pendiente
+
+---
+
 # Objetivo
 
 El Motor de Fuerza Ofensiva tiene como objetivo medir la capacidad real de un equipo para generar peligro y convertir oportunidades de gol.
@@ -167,7 +177,7 @@ Será utilizado por:
 
 - engine/02-Defensive-Strength.md
 - engine/03-Poisson.md
-- engine/04-Confidence.md
+- engine/05-Confidence.md
 
 ---
 
@@ -194,6 +204,22 @@ Las siguientes características podrán incorporarse en versiones posteriores:
 - Ajustes según estilo táctico.
 - Modelos independientes para selecciones y clubes.
 - Integración con modelos de Machine Learning.
+
+---
+
+# Versión 2.0 (Pendiente)
+
+La versión 2.0 deberá incluir:
+
+- Fórmula matemática completa.
+- Método de normalización.
+- Cálculo de ponderaciones.
+- Ejemplo paso a paso.
+- Validación estadística.
+- Casos límite.
+- Estrategia de calibración.
+
+La implementación matemática deberá realizarse únicamente después de validar su capacidad predictiva.
 
 ---
 

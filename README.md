@@ -16,8 +16,10 @@ El objetivo del proyecto no es adivinar resultados, sino construir un modelo est
 4. Nunca modificar pesos sin evidencia.
 5. Si el modelo recomienda no apostar, no se apuesta.
 6. El objetivo es maximizar el ROI, no acertar un partido.
+7. Nunca inventar datos.
+8. Toda decisión debe ser explicable.
 
-Ver detalle en [`docs/01-principios.md`](docs/01-principios.md).
+Ver detalle en [`docs/01-principios.md`](docs/01-principios.md). Los principios estables y de máxima autoridad conceptual del proyecto se consolidan en [`docs/21-Constitucion-del-Modelo-Santiago.md`](docs/21-Constitucion-del-Modelo-Santiago.md).
 
 ---
 
@@ -67,10 +69,20 @@ ModelPredictionApplication/
 | [`11-Versiones.md`](docs/11-Versiones.md) | Historial de versiones del modelo |
 | [`12-Roadmap.md`](docs/12-Roadmap.md) | Hoja de ruta del proyecto |
 | [`13-Glosario.md`](docs/13-Glosario.md) | Glosario de términos (xG, ROI, Yield, etc.) |
+| [`14-Prediction-Pipeline.md`](docs/14-Prediction-Pipeline.md) | Especificación V0.1 del proceso de predicción a nivel de archivo |
+| [`15-Capa-de-Preparacion-de-Variables.md`](docs/15-Capa-de-Preparacion-de-Variables.md) | Capa que transforma la Base de Conocimiento en variables normalizadas para el Engine |
+| [`16-Contrato-Oficial-de-Variables.md`](docs/16-Contrato-Oficial-de-Variables.md) | Tipo, unidad, rango y ciclo de vida de las 12 variables oficiales |
+| [`17-Matriz-de-Consumo-de-Variables.md`](docs/17-Matriz-de-Consumo-de-Variables.md) | Qué motor consume cada variable, y qué ocurre si falta |
+| [`18-Plan-de-Reconciliacion-Arquitectonica.md`](docs/18-Plan-de-Reconciliacion-Arquitectonica.md) | Inventario de inconsistencias del Engine y roadmap de reconciliación (MR-001) |
+| [`19-Architecture-Freeze-Review.md`](docs/19-Architecture-Freeze-Review.md) | Auditoría independiente del inventario anterior (AR-001) |
+| [`20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md`](docs/20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md) | Jerarquía de autoridad y roadmap de gobernanza documental (GR-001) |
+| [`21-Constitucion-del-Modelo-Santiago.md`](docs/21-Constitucion-del-Modelo-Santiago.md) | Principios estables de máxima autoridad conceptual (GOV-001) |
+| [`22-Manual-Operativo-del-Arquitecto-IA.md`](docs/22-Manual-Operativo-del-Arquitecto-IA.md) | Protocolo operativo de toda misión de arquitectura (GOV-002) |
+| [`23-Plan-Maestro-de-Reconciliacion-Operativa.md`](docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md) | Matriz de reconciliación y criterios de Architecture Freeze (AR-002) |
 
 ### engine/ — Motores de predicción
 
-Cada motor tiene una única responsabilidad y consume exclusivamente información desde `data/processed/`. Nunca acceden directamente a Internet.
+Cada motor tiene una única responsabilidad. Consume exclusivamente variables ya preparadas por la Capa de Preparación de Variables ([`docs/15-Capa-de-Preparacion-de-Variables.md`](docs/15-Capa-de-Preparacion-de-Variables.md)) — nunca lee `data/processed/` directamente ni conoce su origen físico. Nunca accede directamente a Internet.
 
 | Motor | Responsabilidad |
 |---|---|
@@ -135,7 +147,7 @@ Cada agente tiene una única responsabilidad y termina con un "Juramento del Age
 
 1. Leer la documentación en `docs/`.
 2. Consultar los motores en `engine/`.
-3. Obtener información desde `data/processed/`.
+3. Obtener información desde `data/processed/` a través de la Capa de Preparación de Variables ([`docs/15-Capa-de-Preparacion-de-Variables.md`](docs/15-Capa-de-Preparacion-de-Variables.md)) — los motores nunca leen `data/processed/` directamente.
 4. Si faltan datos, consultar `data/raw/`.
 5. Generar la predicción.
 6. Guardar la predicción en `data/predictions/`.
@@ -144,18 +156,17 @@ Cada agente tiene una única responsabilidad y termina con un "Juramento del Age
 
 ## Orden de lectura recomendado
 
-Antes de realizar cualquier modificación, revisar en este orden:
+Antes de realizar cualquier modificación, revisar en este orden (detalle completo y justificación en `CLAUDE.md`, secciones "Orden de Lectura" y "Jerarquía Documental"):
 
-1. `CLAUDE.md`
-2. `docs/00-Project-Tracker.md`
-3. `docs/02-modelo.md`
-4. `docs/03-Variables.md`
-5. `docs/04-Algoritmo.md`
-6. `docs/06-Flujo-Operacional.md`
-7. `engine/`
-8. `CHANGELOG.md`
+1. `docs/21-Constitucion-del-Modelo-Santiago.md` — principios estables, máxima autoridad conceptual.
+2. `CLAUDE.md` — gobierna el comportamiento operativo.
+3. `docs/22-Manual-Operativo-del-Arquitecto-IA.md` — protocolo de trabajo para toda misión de arquitectura.
+4. `docs/00-Project-Tracker.md` — estado real de cada misión.
+5. El resto de `docs/` relevante a la tarea, en orden numérico ascendente (regla que cubre automáticamente cualquier documento nuevo).
+6. `engine/`, `models/`, `data/`, según corresponda.
+7. `CHANGELOG.md`.
 
-Si existe conflicto entre documentos, prevalece el de mayor prioridad.
+Si existe conflicto entre documentos, prevalece el de mayor prioridad según la Jerarquía Documental (`CLAUDE.md`).
 
 ---
 
@@ -175,7 +186,9 @@ Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.m
 
 ## Estado actual
 
-Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); `data/` contiene únicamente marcadores de posición, salvo el primer módulo de datos ya diseñado en [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md) (esquema aprobado, sin datos reales todavía). `scripts/` y `excel/` aún no se han creado. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
+Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); la mayor parte de `data/` contiene únicamente marcadores de posición, salvo [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md), que ya tiene datos reales (`selecciones.csv`, `competiciones.csv`). `scripts/` y `excel/` aún no se han creado.
+
+El diseño arquitectónico del Engine y su gobernanza documental completó una fase de reconciliación (`docs/18` a `docs/23`: inventario de inconsistencias, auditoría independiente, jerarquía de gobernanza, Constitución del Modelo Santiago y Manual Operativo del Arquitecto IA) — la ejecución efectiva de esas correcciones sobre `engine/` y el resto de `docs/` sigue en curso. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión, incluyendo el roadmap de reconciliación pendiente, se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
 
 ## Licencia
 

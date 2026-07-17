@@ -2,7 +2,7 @@
 
 **Archivo:** `docs/06-Flujo-Operacional.md`
 
-**Versión:** 1.1.0
+**Versión:** 1.2.0
 
 **Estado:** Diseño (Arquitectura) — sin implementación
 
@@ -59,11 +59,16 @@ Statistician ───► Validación de datos (data/processed/)
   ├── datos insuficientes ──► DETENER, informar al usuario (ver "Manejo de errores")
   │
   ▼ datos suficientes
-Predictor ───► invoca el Engine
+Predictor ───► Capa de Preparación de Variables (docs/15) ───► Variables Oficiales (docs/16)
+  │             (transforma data/processed/ en las 12 variables ya validadas y normalizadas;
+  │              ningún motor accede a data/processed/ directamente)
+  ▼
+Predictor ───► invoca el Engine con las Variables Oficiales ya preparadas
   │             (docs/04-Algoritmo.md ordena los pasos;
   │              models/ define la lógica matemática; engine/01-06 la ejecuta)
   ▼
-Odds Analyzer ───► Valor Esperado (solo si existen cuotas en data/processed/)
+Odds Analyzer ───► Valor Esperado (solo si existen cuotas en data/processed/ —
+                    excepción documentada y no resuelta, ver Fase 3 y `docs/23`, INC-05)
   │
   ▼
 Bankroll Manager ───► (opcional, solo si el usuario lo solicita explícitamente)
@@ -106,7 +111,7 @@ Nueva versión del Modelo Santiago
 Basado en las "Entradas" declaradas por cada motor (`engine/01` a `engine/06`), el orden real de ejecución es por capas, no estrictamente secuencial motor-a-motor:
 
 ```
-Capa 1 (en paralelo, ambos leen solo data/processed/):
+Capa 1 (en paralelo, ambos consumen Variables Oficiales ya preparadas por docs/15 — nunca leen data/processed/ directamente):
    engine/01-Offensive-Strength.md
    engine/02-Defensive-Strength.md
         │
@@ -126,7 +131,7 @@ Capa 4:
 
 Ningún motor de una capa puede ejecutarse antes de que sus dependencias de la capa anterior hayan producido salida — mismo principio que `docs/04-Algoritmo.md`: "Ningún paso podrá omitirse."
 
-**Observación encontrada durante este diseño:** los documentos `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` contienen referencias internas inconsistentes con su propio nombre de archivo (p. ej. `engine/05-Confidence.md` se autodenomina en su encabezado `engine/04-Confidence.md`, y varias secciones de "Dependencias" referencian `engine/07-Bankroll-Engine.md` y `engine/08-Simulation.md`, que no existen en el repositorio). Esta misión no modifica `engine/` (fuera de alcance), pero se deja documentada la inconsistencia para una futura corrección editorial de esos archivos.
+**Observación histórica (resuelta):** los documentos `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` contenían referencias internas inconsistentes con su propio nombre de archivo (p. ej. `engine/05-Confidence.md` se autodenominaba en su encabezado `engine/04-Confidence.md`). Esta inconsistencia, señalada aquí desde el diseño original de este documento (MS-004), fue corregida editorialmente en `MR-002` (verificado con `grep`, ver `CHANGELOG.md`). Las referencias a `engine/07-Bankroll-Engine.md` y `engine/08-Simulation.md` (motores futuros, no implementados todavía) permanecen anotadas como tales en los propios archivos de `engine/`.
 
 ---
 
@@ -169,12 +174,14 @@ Si la información es suficiente pero incompleta en variables secundarias (ej. f
 
 *(Responde: "¿Qué motores dependen de otros?" y "¿Qué información consume cada motor?")*
 
-El **Predictor** ejecuta el Engine siguiendo el diagrama de dependencias de la sección anterior, y el detalle de `docs/04-Algoritmo.md` (Pasos 4 a 11). En cada motor, `models/` es quien define la fórmula/lógica matemática aplicada y `engine/` es quien la ejecuta con los datos del partido — el Predictor invoca `engine/`, nunca `models/` directamente, porque `models/` no ejecuta, solo investiga y respalda:
+Antes de invocar cualquier motor, el Predictor invoca la **Capa de Preparación de Variables** (`docs/15-Capa-de-Preparacion-de-Variables.md`), que transforma `data/processed/` en las 12 Variables Oficiales (`docs/16-Contrato-Oficial-de-Variables.md`), ya validadas y normalizadas. **Ningún motor de `engine/` accede directamente a `data/processed/` ni conoce su origen físico** — reciben exclusivamente las variables ya preparadas por esa capa (`docs/17-Matriz-de-Consumo-de-Variables.md` detalla qué motor consume cada una).
 
-1. `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` — consumen únicamente `data/processed/` (estadísticas por partido/selección). Se ejecutan en paralelo, uno no depende del otro.
-2. `engine/03-Poisson.md` — consume las salidas de ambos motores anteriores (Fuerza Ofensiva y Defensiva de ambos equipos).
-3. `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` — consumen las salidas de Poisson y de las Fuerzas, más variables contextuales de `docs/03-Variables.md` (lesiones, rotaciones, fase del torneo). Se ejecutan en paralelo entre sí.
-4. `engine/06-Expected-Value.md` — consume las salidas de Poisson, Chaos Index y Confidence, más las cuotas de mercado (si existen en `data/processed/`).
+El **Predictor** ejecuta el Engine siguiendo el diagrama de dependencias de la sección anterior, y el detalle de `docs/04-Algoritmo.md` (Pasos 4 a 11). En cada motor, `models/` es quien define la fórmula/lógica matemática aplicada y `engine/` es quien la ejecuta con las Variables Oficiales ya preparadas — el Predictor invoca `engine/`, nunca `models/` directamente, porque `models/` no ejecuta, solo investiga y respalda:
+
+1. `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` — consumen las Variables Oficiales ya preparadas (Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo/Solidez Defensiva, Disponibilidad de Plantilla, Fatiga). Se ejecutan en paralelo, uno no depende del otro.
+2. `engine/03-Poisson.md` — consume las salidas de ambos motores anteriores (Fuerza Ofensiva y Defensiva de ambos equipos), no variables directamente.
+3. `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` — consumen las salidas de Poisson y de las Fuerzas, más Variables Oficiales contextuales ya preparadas (Disponibilidad de Plantilla, Fatiga, Factores Externos). Se ejecutan en paralelo entre sí.
+4. `engine/06-Expected-Value.md` — consume las salidas de Poisson, Chaos Index y Confidence, más las cuotas de mercado (si existen en `data/processed/`). **Excepción documentada, no resuelta:** a diferencia de los cinco motores anteriores, `engine/06` consume las cuotas directamente de `data/processed/`, sin pasar por la Capa de Preparación de Variables ni formar parte del Contrato Oficial de Variables — contradicción funcional ya identificada como `INC-05` (`docs/18-Plan-de-Reconciliacion-Arquitectonica.md`, `docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md`). Resolverla requiere una decisión de diseño (modelar las cuotas como variable oficial o hacerlas pasar por la Capa) fuera del alcance de esta reconciliación editorial.
 
 ## Fase 4 — Valor Esperado (condicional)
 
@@ -223,7 +230,7 @@ error-analysis.md  →  pattern-discovery.md  →  confidence-calibration.md  �
 - `models/`.
 - Cualquier variable o peso del modelo.
 
-Su única salida posible es una **propuesta de mejora documentada** (`learning/weight-adjustment.md`), con la evidencia que la respalda. Esa propuesta queda en estado "pendiente" hasta que el **Arquitecto Estadístico del Modelo Santiago** (rol definido en `CLAUDE.md`) la revise y decida explícitamente aprobarla o rechazarla. Ninguna otra fase, agente o proceso automático puede aprobarla en su lugar.
+Su única salida posible es una **propuesta de mejora documentada** (`learning/weight-adjustment.md`), con la evidencia que la respalda. Esa propuesta queda en estado "pendiente" hasta que el **Arquitecto Estadístico Humano** (rol definido y distinguido del Arquitecto Estadístico IA en `docs/21-Constitucion-del-Modelo-Santiago.md`, Artículo 5) la revise y decida explícitamente aprobarla o rechazarla. Ninguna otra fase, agente, ni el propio Arquitecto Estadístico IA, puede aprobarla en su lugar — es, por diseño, la única decisión de todo este flujo que requiere una persona humana.
 
 - Si se **rechaza**: el peso, variable, fórmula o algoritmo actual se mantiene sin cambios. El intento y su justificación quedan igualmente documentados (no se descarta la evidencia, solo se descarta el cambio).
 - Si se **aprueba**: el cambio pasa a la Fase 10 (Versionado) — `learning/` en sí mismo no aplica el cambio ni siquiera después de la aprobación; quien lo aplica es el proceso de diseño normal (edición documentada de `docs/03-Variables.md`, `engine/` o `models/`, según corresponda), y quien lo registra es Versionado.
@@ -256,14 +263,15 @@ El resultado de esta fase es una **nueva versión del Modelo Santiago**, con su 
 | `.claude/agents/statistician.md` | Validación de datos antes del cálculo (Fase 2) | Predecir resultados |
 | `.claude/agents/predictor.md` | Ejecuta el Engine (Fase 3) | Recomendar apuestas, modificar pesos |
 | `models/` | Define la lógica matemática y el fundamento estadístico de cada motor | Ejecutar cálculos sobre datos de un partido real |
-| `engine/01-06` | Ejecuta la lógica ya definida en `models/` para calcular fuerzas, probabilidades, caos, confianza y valor esperado | Acceder a Internet, inventar estadísticas, definir su propia metodología sin respaldo de `models/` |
+| `docs/15-Capa-de-Preparacion-de-Variables.md` | Transforma `data/processed/` en las 12 Variables Oficiales, ya validadas y normalizadas (Fase 3, antes de invocar cualquier motor) | Calcular probabilidades, fuerzas, caos o valor esperado; almacenar variables permanentemente |
+| `engine/01-06` | Ejecuta la lógica ya definida en `models/` para calcular fuerzas, probabilidades, caos, confianza y valor esperado, a partir de las Variables Oficiales ya preparadas | Acceder a Internet, inventar estadísticas, definir su propia metodología sin respaldo de `models/`, acceder directamente a `data/processed/` (excepción documentada y no resuelta: `engine/06` y las cuotas, ver Fase 3) |
 | `.claude/agents/odds-analyzer.md` | Valor Esperado condicional a cuotas (Fase 4) | Generar predicciones |
 | `.claude/agents/bankroll-manager.md` | Gestión de capital opcional (Fase 5) | Modificar probabilidades o el Engine |
 | `data/predictions/` | Registro inmutable de cada predicción (Fase 6) | Sobrescribirse |
 | `data/results/` | Registro del resultado oficial (Fase 7) | — |
 | `.claude/agents/auditor.md` | Comparación predicción vs. resultado (Fase 8) | Modificar predicciones históricas, cambiar pesos |
 | `learning/` | Análisis retrospectivo y generación de **propuestas** de mejora (Fase 9) | Modificar automáticamente `docs/`, `engine/`, `models/` o cualquier variable; calcular probabilidades; predecir |
-| Arquitecto Estadístico del Modelo Santiago | Revisa y aprueba/rechaza cada propuesta de `learning/` (Fase 9→10) | Aprobar cambios sin evidencia estadística (`CLAUDE.md`) |
+| Arquitecto Estadístico **Humano** (distinto del Arquitecto Estadístico IA, ver `docs/21-Constitucion-del-Modelo-Santiago.md`, Art. 5) | Revisa y aprueba/rechaza cada propuesta de `learning/` (Fase 9→10) | Aprobar cambios sin evidencia estadística (`CLAUDE.md`); delegar esta aprobación en el Arquitecto Estadístico IA |
 | Versionado (`docs/11-Versiones.md`, `learning/version-history.md`, `CHANGELOG.md`) | Documenta el cambio aprobado y cierra el ciclo con una nueva versión (Fase 10, final) | Ejecutarse sin una aprobación explícita previa |
 
 ---
@@ -309,7 +317,7 @@ Ningún paso puede omitirse ni reordenarse sin justificación documentada (`CLAU
 | Fase | Lee de | Escribe en |
 |---|---|---|
 | Validación (2) | `data/processed/` | — |
-| Ejecución del Engine (3-4) | `data/processed/` | — |
+| Ejecución del Engine (3-4) | Variables Oficiales preparadas por `docs/15` (que a su vez lee `data/processed/` — nunca el Engine directamente; excepción documentada: `engine/06` lee `cuotas.csv` directamente, ver Fase 3) | — |
 | Registro de predicción (6) | — | `data/predictions/` |
 | Resultado oficial (7) | — | `data/results/` |
 | Auditoría (8) | `data/predictions/`, `data/results/` | `data/audit/` |
@@ -331,7 +339,7 @@ Ningún paso puede omitirse ni reordenarse sin justificación documentada (`CLAU
 `models/` y `engine/` participan juntos en la Fase 3, pero con responsabilidades estrictamente distintas:
 
 - **`models/` define la lógica matemática**: fórmulas, fundamento estadístico, comparaciones y validaciones de cada motor (Poisson, Elo, Expected Value, Confidence, Offensive/Defensive Strength). No ejecuta cálculos sobre un partido real — es investigación, no implementación.
-- **`engine/` ejecuta dicha lógica**: cada motor (`engine/01` a `engine/06`) aplica, sobre los datos concretos del partido, la fórmula ya investigada y respaldada en `models/`.
+- **`engine/` ejecuta dicha lógica**: cada motor (`engine/01` a `engine/06`) aplica, sobre las Variables Oficiales del partido ya preparadas por `docs/15-Capa-de-Preparacion-de-Variables.md`, la fórmula ya investigada y respaldada en `models/`.
 
 Este documento no altera ni reemplaza `docs/04-Algoritmo.md`: el detalle matemático/lógico interno de cada motor sigue perteneciendo exclusivamente a `models/` (la lógica) y `engine/` (la ejecución). Lo que este documento aporta es el **orden de invocación** entre motores (el diagrama de dependencias por capas) y quién es responsable de invocar cada uno (el Predictor, vía el Engine completo; el Odds Analyzer, específicamente para `engine/06`). Ningún motor puede ejecutar una lógica que no esté antes respaldada en `models/` (`CLAUDE.md`: "Investigación antes de implementación").
 

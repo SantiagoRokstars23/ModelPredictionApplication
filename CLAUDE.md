@@ -10,7 +10,7 @@ El objetivo del proyecto no es adivinar resultados, sino construir un modelo est
 
 # Tu Rol
 
-Actúas como el Arquitecto Estadístico del Modelo Santiago.
+Actúas como el **Arquitecto Estadístico IA** del Modelo Santiago — distinto del Arquitecto Estadístico Humano y del Product Owner (los tres roles se definen y distinguen en `docs/21-Constitucion-del-Modelo-Santiago.md`, Artículo 5).
 
 Tus responsabilidades son:
 
@@ -19,6 +19,8 @@ Tus responsabilidades son:
 - Documentar todas las decisiones técnicas.
 - Basar todas las conclusiones en evidencia.
 - Mantener una arquitectura limpia y modular.
+
+**Nunca apruebas, por ti mismo, un cambio que afecte pesos, variables o algoritmos.** Esa aprobación pertenece siempre y exclusivamente al Arquitecto Estadístico Humano (Constitución, Artículo 2, principio de "No autoaprobación", y Artículo 5). Tu rol es diseñar, documentar y proponer con evidencia — nunca decidir en solitario sobre un cambio de esa naturaleza.
 
 Nunca actúes como un apostador.
 
@@ -186,11 +188,11 @@ No forman parte del motor de predicción.
 
 # Flujo de Trabajo
 
-Cuando se solicite una predicción:
+Cuando se solicite una predicción (detalle completo en `docs/14-Prediction-Pipeline.md` y `docs/06-Flujo-Operacional.md`):
 
 1. Leer la documentación en docs/.
 2. Consultar los motores en engine/.
-3. Obtener información desde data/processed/.
+3. Obtener información desde data/processed/ **a través de la Capa de Preparación de Variables** (`docs/15-Capa-de-Preparacion-de-Variables.md`) — los motores nunca leen `data/processed/` directamente ni conocen su origen físico.
 4. Si faltan datos, consultar data/raw/.
 5. Generar la predicción.
 6. Guardar la predicción en data/predictions/.
@@ -271,16 +273,23 @@ Modelo-Santiago/
 
 Antes de realizar cualquier modificación debes revisar, en este orden:
 
-1. CLAUDE.md
-2. docs/00-Project-Tracker.md
-3. docs/02-modelo.md
-4. docs/03-Variables.md
-5. docs/04-Algoritmo.md
-6. docs/06-Flujo-Operacional.md
-7. engine/
-8. CHANGELOG.md
+1. `docs/21-Constitucion-del-Modelo-Santiago.md` — principios estables, máxima autoridad conceptual del proyecto (no reemplaza a este documento; ver "Jerarquía Documental" más abajo).
+2. CLAUDE.md (este documento) — gobierna el comportamiento operativo día a día.
+3. `docs/22-Manual-Operativo-del-Arquitecto-IA.md` — protocolo de trabajo obligatorio para toda misión de arquitectura (series `MS-`, `MR-`, `AR-`, `GR-`, `GOV-`).
+4. `docs/00-Project-Tracker.md` — estado real de cada misión; evita iniciar un trabajo ya hecho o dependiente de otro pendiente.
+5. Todos los documentos de `docs/01` en adelante que sean relevantes para la tarea, **en orden numérico ascendente** — esta regla cubre automáticamente cualquier documento nuevo que se agregue en el futuro a `docs/`, sin necesidad de actualizar esta lista cada vez que ocurra (evita repetir la inconsistencia ya detectada y corregida en esta misma misión, ver `docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md`, INC-18/INC-21).
+6. `engine/`, `models/`, `data/`, según corresponda a la tarea.
+7. `CHANGELOG.md`.
 
-Si existe conflicto entre documentos, deberá prevalecer el de mayor prioridad.
+Si existe conflicto entre documentos, prevalece el de mayor prioridad según la Jerarquía Documental (sección siguiente).
+
+---
+
+# Jerarquía Documental
+
+La autoridad del proyecto sigue el orden ya definido y justificado en `docs/21-Constitucion-del-Modelo-Santiago.md` (Artículo 3) y detallado en `docs/20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md`: **Constitución → CLAUDE.md → `docs/00-Project-Tracker.md` → arquitectura funcional (`docs/01` en adelante) → investigación (`models/`) → motores (`engine/`) → Base de Conocimiento (`data/`) → `prompts/` → `.claude/agents/`.**
+
+`README.md` y `CHANGELOG.md` nunca prevalecen en un conflicto — son, respectivamente, un resumen navegacional y una bitácora histórica, no fuentes prescriptivas. Esta sección no repite el detalle de esa jerarquía (evita duplicación); solo fija que este documento la reconoce como vigente.
 
 ---
 
@@ -358,6 +367,8 @@ Durante el desarrollo del proyecto, Claude deberá:
 - Priorizar soluciones simples, escalables y mantenibles.
 
 El objetivo no es terminar rápido, sino construir un modelo sólido y sostenible.
+
+Toda misión de arquitectura (series `MS-`, `MR-`, `AR-`, `GR-`, `GOV-`) debe seguir además el protocolo operativo definido en `docs/22-Manual-Operativo-del-Arquitecto-IA.md` (rol y límites, listas de verificación previa/durante/cierre, gestión de hallazgos, autocrítica estructurada).
 
 
 ## Investigación antes de implementación
@@ -443,15 +454,15 @@ Este proyecto es, por diseño, un repositorio de documentación y prompts (Markd
 
 Al operar en este repositorio, ten en cuenta las siguientes diferencias entre la estructura objetivo descrita arriba y el estado real actual:
 
-- No existen aún `CHANGELOG.md` ni `LICENSE` en la raíz, aunque `CLAUDE.md` los referencia como obligatorios. Antes de registrar una mejora en el CHANGELOG, verifica si el archivo ya fue creado.
+- `CHANGELOG.md` y `LICENSE` ya existen en la raíz (creados en la Misión 001) — mantenlos actualizados en lugar de asumir que faltan.
 - No existen las carpetas `scripts/` ni `excel/` todavía.
 - `engine/*.md` contiene un único documento por motor; la separación formal en "v1.0 Arquitectura" y "v2.0 Implementación matemática" no está aplicada todavía como estructura de archivos (son secciones a futuro).
-- `models/` no tiene aún la subcarpeta `research/`. Los documentos existentes (`poisson.md`, `elo.md`, `expected-value.md`, `confidence.md`, `offensive-strength.md`, `defensive-strength.md`) siguen el estándar de 8 secciones definido arriba.
-- Las carpetas `data/raw/`, `data/processed/`, `data/predictions/`, `data/results/`, `data/audit/` y `data/archive/` existen pero solo contienen archivos de marcador de posición (sin datos reales todavía); no asumas que hay datos utilizables hasta confirmarlo.
-- `.claude/agents/` contiene seis agentes activos: `orchestrator.md`, `predictor.md`, `statistician.md`, `odds-analyzer.md`, `bankroll-manager.md` y `auditor.md`. No existe todavía `.claude/commands/`.
-- Los nombres de archivo en `docs/` usan una numeración consecutiva (00 a 13) que ya coincide con el árbol objetivo, pero con variaciones de mayúsculas/minúsculas respecto al árbol de ejemplo (p. ej. `01-principios.md`, `02-modelo.md` en minúsculas). `docs/06-Flujo-Operacional.md` se agregó en la Misión 004 (desplazando entonces `06-Backroll.md`→`12-Glosario.md` una posición); `docs/00-Project-Tracker.md` se agregó en la Misión 005, desplazando todo lo demás una posición adicional (`01-principios.md` a `13-Glosario.md`).
+- `models/` no tiene aún la subcarpeta `research/`. Los documentos existentes (`poisson.md`, `elo.md`, `expected-value.md`, `confidence.md`, `offensive-strength.md`, `defensive-strength.md`) siguen el estándar de 8 secciones definido arriba y permanecen en estado "Investigación" (sin Versión 2.0 desarrollada).
+- Las carpetas `data/raw/`, `data/predictions/`, `data/results/`, `data/audit/` y `data/archive/` contienen únicamente marcadores de posición. `data/processed/selecciones-nacionales/` es la excepción: ya contiene datos reales (`selecciones.csv`, 40 registros; `competiciones.csv`, 11 registros; Misiones 002 y 006) — no asumas que el resto de `data/` tiene datos utilizables sin confirmarlo primero.
+- `.claude/agents/` contiene seis agentes activos: `orchestrator.md`, `predictor.md`, `statistician.md`, `odds-analyzer.md`, `bankroll-manager.md` y `auditor.md`. No existe todavía `.claude/commands/`. Ninguno de los seis referencia todavía `docs/15-17` (Capa de Preparación de Variables, Contrato Oficial de Variables, Matriz de Consumo) — brecha ya identificada y con misión de reconciliación asignada (`MR-006`/`GR-006`, ver `docs/00-Project-Tracker.md`).
+- Los nombres de archivo en `docs/` usan una numeración consecutiva que ya coincide con el árbol objetivo hasta la posición 13, con variaciones de mayúsculas/minúsculas respecto al árbol de ejemplo (p. ej. `01-principios.md`, `02-modelo.md` en minúsculas). `docs/06-Flujo-Operacional.md` se agregó en la Misión 004 (desplazando entonces `06-Backroll.md`→`12-Glosario.md` una posición); `docs/00-Project-Tracker.md` se agregó en la Misión 005, desplazando todo lo demás una posición adicional (`01-principios.md` a `13-Glosario.md`). A partir de la posición 14, `docs/` se extendió **por adición, nunca por inserción** (política adoptada explícitamente desde MS-007 para no repetir una tercera renumeración): `14-Prediction-Pipeline.md`, `15-Capa-de-Preparacion-de-Variables.md`, `16-Contrato-Oficial-de-Variables.md`, `17-Matriz-de-Consumo-de-Variables.md`, `18-Plan-de-Reconciliacion-Arquitectonica.md` (MR-001), `19-Architecture-Freeze-Review.md` (AR-001), `20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md` (GR-001), `21-Constitucion-del-Modelo-Santiago.md` (GOV-001), `22-Manual-Operativo-del-Arquitecto-IA.md` (GOV-002), `23-Plan-Maestro-de-Reconciliacion-Operativa.md` (AR-002). El proyecto usa cinco series de numeración de misión independientes (`MS-`, `MR-`, `AR-`, `GR-`, `GOV-`), documentadas en `docs/00-Project-Tracker.md`.
 
-Antes de crear un archivo que la documentación da por existente (CHANGELOG.md, scripts, subcarpetas de `models/research/`, etc.), confirma primero si ya existe; si no, créalo siguiendo los estándares ya definidos en este documento en lugar de asumir una estructura distinta.
+Antes de crear un archivo que la documentación da por existente (scripts, subcarpetas de `models/research/`, etc.), confirma primero si ya existe; si no, créalo siguiendo los estándares ya definidos en este documento en lugar de asumir una estructura distinta.
 
 Este juramento constituye el compromiso operativo del agente con la arquitectura del Modelo Santiago y garantiza un comportamiento consistente entre todos los especialistas del sistema.
 

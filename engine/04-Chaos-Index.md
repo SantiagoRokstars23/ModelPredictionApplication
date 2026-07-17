@@ -216,7 +216,7 @@ Este motor será utilizado por:
 
 - engine/05-Confidence.md
 - engine/06-Expected-Value.md
-- engine/07-Bankroll-Engine.md
+- engine/07-Bankroll-Engine.md *(futuro, no implementado todavía)*
 
 ---
 

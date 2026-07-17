@@ -186,8 +186,8 @@ El motor nunca deberá:
 
 Este motor será utilizado por:
 
-- engine/07-Bankroll-Engine.md
-- engine/08-Simulation.md
+- engine/07-Bankroll-Engine.md *(futuro, no implementado todavía)*
+- engine/08-Simulation.md *(futuro, no implementado todavía)*
 
 ---
 
