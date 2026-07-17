@@ -2,7 +2,7 @@
 
 **Archivo:** `docs/16-Contrato-Oficial-de-Variables.md`
 
-**Versión:** 1.0.0
+**Versión:** 1.1.0
 
 **Estado:** Especificación oficial — Contrato de datos (sin implementación)
 
@@ -186,6 +186,7 @@ La condición necesaria para que esto se cumpla es que **ninguna implementación
 - **La Base de Conocimiento nunca consume variables.** `data/processed/` es el origen de los datos de negocio, nunca el destino de una variable ya construida.
 - **Únicamente la Capa de Preparación de Variables puede construir variables** (`docs/15-Capa-de-Preparacion-de-Variables.md`).
 - **Las variables nunca se almacenan permanentemente** como parte del conocimiento histórico — no existe (ni debe existir) un `data/processed/variables.csv`; son estrictamente temporales (sección 7).
+- **Las cuotas de mercado nunca serán una Variable Oficial de este contrato** (principio arquitectónico formalizado en MR-004, a partir del análisis de `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`). Las 12 variables de este documento describen exclusivamente rendimiento deportivo de un equipo; las cuotas son datos de mercado, de naturaleza distinta (múltiples casas, múltiples mercados, cambiantes en el tiempo). Deberán prepararse, en el futuro, como una categoría de **Datos de Mercado** paralela — pasando igualmente por la Capa de Preparación de Variables (`docs/15`), pero con su propio contrato, todavía sin diseñar. Hasta que ese contrato exista, `engine/06-Expected-Value.md` continúa consumiendo `cuotas.csv` directamente, como excepción documentada (`INC-05` — resuelta en principio, pendiente de implementación completa).
 
 ---
 
@@ -197,13 +198,13 @@ La condición necesaria para que esto se cumpla es que **ninguna implementación
 | Variable002 | Rendimiento en el Torneo | Decimal | Índice (0-100) | 0 a 100, sin negativos | Sí | Solo si el equipo debuta en el torneo actual | Capa de Preparación de Variables | `engine/01`, `engine/02` |
 | Variable003 | Potencial Ofensivo | Decimal | Índice (0-100), derivado de xG/disparos | 0 a 100, sin negativos | Sí | No | Capa de Preparación de Variables | `engine/01` |
 | Variable004 | Solidez Defensiva | Decimal | Índice (0-100), derivado de xGA | 0 a 100, sin negativos | Sí | No | Capa de Preparación de Variables | `engine/02` |
-| Variable005 | Compatibilidad Táctica | Decimal | Índice relativo (-100 a 100) | -100 a 100, acepta negativos | Sí (Nivel A, `docs/02-modelo.md`) | Sí, en la práctica actual (ver Observaciones) | Capa de Preparación de Variables | Sin consumidor explícito declarado en `engine/` (ver Observaciones del Arquitecto) |
+| Variable005 | Compatibilidad Táctica | Decimal | Índice relativo (-100 a 100) | -100 a 100, acepta negativos | No en V1 (Nivel A nominal en `docs/02-modelo.md`, pero **diferida** — ver `docs/03`, "Estado en V1") | No aplica — no se construye en V1 | Capa de Preparación de Variables (cuando exista fuente de datos) | Ninguno — diferida formalmente a futura investigación de datos (MR-004; ver `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`) |
 | Variable006 | Disponibilidad de Plantilla | Decimal | Porcentaje (0-100) | 0 a 100, sin negativos | No | Sí | Capa de Preparación de Variables | `engine/01`, `engine/02`, `engine/04`, `engine/05` |
 | Variable007 | Fatiga | Decimal | Índice (0-100) | 0 a 100, sin negativos | No | Sí | Capa de Preparación de Variables | `engine/01`, `engine/02`, `engine/04` |
-| Variable008 | Calidad de Plantilla | Decimal | Índice (0-100) | 0 a 100, sin negativos | No (Nivel C) | Sí | Capa de Preparación de Variables | Sin consumidor explícito declarado en `engine/` (ver Observaciones del Arquitecto) |
-| Variable009 | Localía | Texto controlado (ENUM) | Condición: `local` / `visitante` / `neutral` | Valores permitidos: los tres anteriores | No (Nivel D) | Sí, si la sede aún no está definida | Capa de Preparación de Variables | Sin consumidor explícito declarado en `engine/` (ver Observaciones del Arquitecto) |
-| Variable010 | Historial Directo | Entero | Partidos (diferencia neta de victorias) | Sin límite fijo, acepta negativos | No (Nivel D) | Sí | Capa de Preparación de Variables | Sin consumidor explícito declarado en `engine/` (ver Observaciones del Arquitecto) |
-| Variable011 | Estado Psicológico | Decimal | Índice (0-100) | 0 a 100, sin negativos | No (sin nivel asignado en `docs/02-modelo.md`, ver Observaciones) | Sí | Capa de Preparación de Variables | Sin consumidor explícito declarado en `engine/` (ver Observaciones del Arquitecto) |
+| Variable008 | Calidad de Plantilla | Decimal | Índice (0-100) | 0 a 100, sin negativos | No (Nivel C) | Sí | Capa de Preparación de Variables | `engine/01`, `engine/02` — **alcance reducido**: solo "profundidad de plantilla" (`convocatorias.csv`+`jugadores.csv`); "valor de mercado" diferido (MR-004) |
+| Variable009 | Localía | Texto controlado (ENUM) | Condición: `local` / `visitante` / `neutral` | Valores permitidos: los tres anteriores | No (Nivel D) | Sí, si la sede aún no está definida | Capa de Preparación de Variables | `engine/03-Poisson.md` (directo — MR-004) |
+| Variable010 | Historial Directo | Entero | Partidos (diferencia neta de victorias) | Sin límite fijo, acepta negativos | No (Nivel D) | Sí | Capa de Preparación de Variables | `engine/05-Confidence.md` (factor contextual menor — MR-004) |
+| Variable011 | Estado Psicológico | Decimal | Índice (0-100) | 0 a 100, sin negativos | No en V1 (sin nivel asignado en `docs/02-modelo.md`, y **diferida** — ver `docs/03`, "Estado en V1") | No aplica — no se construye en V1 | Capa de Preparación de Variables (cuando exista fuente de datos) | Ninguno — diferida formalmente a futura investigación de datos (MR-004; ver `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`) |
 | Variable012 | Factores Externos | Decimal | Índice (0-100) | 0 a 100, sin negativos | No (Nivel D) | Sí | Capa de Preparación de Variables | `engine/04` |
 
 Los identificadores `VariableNNN` corresponden exactamente a los encabezados "# Variable NNN" de `docs/03-Variables.md` — no se crea una numeración paralela.

@@ -2,7 +2,7 @@
 
 **Archivo:** `docs/17-Matriz-de-Consumo-de-Variables.md`
 
-**Versión:** 1.0.0
+**Versión:** 1.1.0
 
 **Estado:** Especificación oficial — Trazabilidad del Engine (sin implementación)
 
@@ -65,31 +65,31 @@ Que un motor **lea** el valor ya construido de una Variable Oficial (`docs/16-Co
 
 | Categoría | Contenido |
 |---|---|
-| Variables consumidas (directas) | **Variable003** (Potencial Ofensivo) — entrada primaria; **Variable001** (Forma Reciente), **Variable002** (Rendimiento en el Torneo) — secundarias; **Variable006** (Disponibilidad de Plantilla), **Variable007** (Fatiga) — contextuales |
-| Variables opcionales | Variable006, Variable007 (contextuales: "modifican el resultado final cuando exista evidencia suficiente" — el propio motor las trata como no obligatorias) |
+| Variables consumidas (directas) | **Variable003** (Potencial Ofensivo) — entrada primaria; **Variable001** (Forma Reciente), **Variable002** (Rendimiento en el Torneo) — secundarias; **Variable006** (Disponibilidad de Plantilla), **Variable007** (Fatiga), **Variable008** (Calidad de Plantilla, alcance reducido — MR-004) — contextuales |
+| Variables opcionales | Variable006, Variable007, Variable008 (contextuales: "modifican el resultado final cuando exista evidencia suficiente" — el propio motor las trata como no obligatorias) |
 | Variables indirectas | Ninguna — es un motor de Capa 1 (`docs/06-Flujo-Operacional.md`), no consume salidas de otro motor |
-| Variables no utilizadas | Variable004, 005, 008, 009, 010, 011, 012 |
+| Variables no utilizadas | Variable004, 005 (diferida, MR-004), 009, 010, 011 (diferida, MR-004), 012 |
 | Información consumida que **no** proviene de una Variable Oficial | "Calidad del Rival", "Posesión en Campo Rival", "Ataques Peligrosos" (declaradas en "Variables Secundarias" del documento, sin equivalente en `docs/03-Variables.md`) |
 
 ## `engine/02-Defensive-Strength.md`
 
 | Categoría | Contenido |
 |---|---|
-| Variables consumidas (directas) | **Variable004** (Solidez Defensiva) — primaria; **Variable001**, **Variable002** — secundarias; **Variable006**, **Variable007** — contextuales |
-| Variables opcionales | Variable006, Variable007 |
+| Variables consumidas (directas) | **Variable004** (Solidez Defensiva) — primaria; **Variable001**, **Variable002** — secundarias; **Variable006**, **Variable007**, **Variable008** (alcance reducido — MR-004) — contextuales |
+| Variables opcionales | Variable006, Variable007, Variable008 |
 | Variables indirectas | Ninguna — Capa 1 |
-| Variables no utilizadas | Variable003, 005, 008, 009, 010, 011, 012 |
+| Variables no utilizadas | Variable003, 005 (diferida, MR-004), 009, 010, 011 (diferida, MR-004), 012 |
 | Información no oficial | "Calidad Ofensiva de los Rivales", "Recuperaciones", "Intercepciones", "Presión Defensiva" |
 
 ## `engine/03-Poisson.md`
 
 | Categoría | Contenido |
 |---|---|
-| Variables consumidas (directas) | **Ninguna.** El propio documento declara: "El motor recibe información proveniente de otros motores" (Fuerza Ofensiva y Fuerza Defensiva de ambos equipos) |
-| Variables opcionales | No aplica — no consume variables directamente |
-| Variables indirectas | Variable001, 002, 003, 004, 006, 007 (todas las que alimentan a `engine/01`/`engine/02`, transitivamente, a través de Fuerza Ofensiva/Defensiva) |
-| Variables no utilizadas (ni directa ni indirectamente) | Variable005, 008, 009, 010, 011, 012 |
-| Información no oficial | Ninguna — solo consume salidas de motores, no datos de negocio |
+| Variables consumidas (directas) | **Variable009** (Localía — MR-004: ajusta el cálculo de goles esperados según condición de local/visitante/sede neutral). El resto de su entrada declarada originalmente es indirecta: "recibe información proveniente de otros motores" (Fuerza Ofensiva y Fuerza Defensiva de ambos equipos) |
+| Variables opcionales | Variable009 (Localía puede no estar definida si la sede aún no se conoce) |
+| Variables indirectas | Variable001, 002, 003, 004, 006, 007, 008 (todas las que alimentan a `engine/01`/`engine/02`, transitivamente, a través de Fuerza Ofensiva/Defensiva) |
+| Variables no utilizadas (ni directa ni indirectamente) | Variable005 (diferida, MR-004), 010, 011 (diferida, MR-004), 012 |
+| Información no oficial | Ninguna — el resto de su entrada son salidas de motores, no datos de negocio |
 
 ## `engine/04-Chaos-Index.md`
 
@@ -104,15 +104,15 @@ Que un motor **lea** el valor ya construido de una Variable Oficial (`docs/16-Co
 
 ## `engine/05-Confidence.md`
 
-*(Nota: este archivo se autodenomina en su propio encabezado `engine/04-Confidence.md` — inconsistencia ya documentada desde MS-004, no se corrige aquí.)*
+*(Nota: la inconsistencia de autorreferencia en el encabezado de este archivo, documentada desde MS-004, fue corregida editorialmente en `MR-002`.)*
 
 | Categoría | Contenido |
 |---|---|
-| Variables consumidas (directas) | **Variable006** (vía "Lesiones confirmadas, Suspensiones, Rotaciones esperadas"), **Variable007** (vía "Estado físico de los equipos") |
-| Variables opcionales | Ambas — el documento las lista como información adicional que "además podrá considerar" |
-| Variables indirectas | Variable001, 002, 003, 004 (vía las salidas de `engine/01`, `engine/02`, `engine/03` que declara consumir) |
-| Consumo ambiguo, no confirmado | **Variable005**, **Variable011** — vía "Cambios recientes de entrenador", mismo patrón que `engine/04` |
-| Variables no utilizadas | Variable008, 009, 010, 012 |
+| Variables consumidas (directas) | **Variable006** (vía "Lesiones confirmadas, Suspensiones, Rotaciones esperadas"), **Variable007** (vía "Estado físico de los equipos"), **Variable010** (Historial Directo — MR-004, factor contextual menor) |
+| Variables opcionales | Las tres — el documento las lista como información adicional que "además podrá considerar" |
+| Variables indirectas | Variable001, 002, 003, 004, 008, 009 (vía las salidas de `engine/01`, `engine/02`, `engine/03` que declara consumir) |
+| Consumo ambiguo, no confirmado | **Variable005**, **Variable011** — vía "Cambios recientes de entrenador", mismo patrón que `engine/04`; ambas formalmente diferidas por MR-004 |
+| Variables no utilizadas | Variable012 |
 | Información no oficial | "Calidad de los datos disponibles" (meta-señal sobre la confianza de la Capa de Preparación de Variables, no una variable en sí); "Competición poco predecible" (metadato de `competiciones.tipo`, definido en `data/processed/selecciones-nacionales/competiciones.csv` — no forma parte de las 12 Variables Oficiales) |
 
 ## `engine/06-Expected-Value.md`
@@ -129,15 +129,17 @@ Que un motor **lea** el valor ya construido de una Variable Oficial (`docs/16-Co
 
 # 3. ¿Qué variables no tienen actualmente consumidor?
 
+**Actualizado por MR-004** (implementación de las recomendaciones de `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`): de las 5 variables huérfanas identificadas en MS-009/MS-010, **3 ya tienen consumidor confirmado** y las **2 restantes quedan formalmente diferidas** — no huérfanas por omisión, sino excluidas de V1 por una razón documentada: ausencia de fuente de datos real en la Base de Conocimiento.
+
 | Variable | Nivel (`docs/02-modelo.md`) | Estado de consumo |
 |---|---|---|
-| **Variable008** (Calidad de Plantilla) | Nivel C | **Huérfana confirmada** — cero motores la consumen, ni siquiera de forma ambigua |
-| **Variable009** (Localía) | Nivel D | **Huérfana confirmada** — cero motores la consumen |
-| **Variable010** (Historial Directo) | Nivel D | **Huérfana confirmada** — cero motores la consumen |
-| **Variable005** (Compatibilidad Táctica) | **Nivel A** | **Huérfana con solapamiento ambiguo no confirmado** en `engine/04`/`engine/05` (ver sección 2) — ningún motor la cita por su nombre oficial |
-| **Variable011** (Estado Psicológico) | Sin nivel asignado (ver MS-009) | **Huérfana con solapamiento ambiguo no confirmado**, mismo patrón que Variable005 |
+| **Variable008** (Calidad de Plantilla) | Nivel C | **Resuelta (MR-004)** — `engine/01`, `engine/02`, alcance reducido (solo "profundidad de plantilla") |
+| **Variable009** (Localía) | Nivel D | **Resuelta (MR-004)** — `engine/03-Poisson.md` |
+| **Variable010** (Historial Directo) | Nivel D | **Resuelta (MR-004)** — `engine/05-Confidence.md`, factor contextual menor |
+| **Variable005** (Compatibilidad Táctica) | **Nivel A** | **Diferida formalmente (MR-004)** — no existe fuente de datos (formación/estilo táctico) en ningún CSV de `data/processed/selecciones-nacionales/`; requiere una misión de diseño de datos antes de asignarle motor |
+| **Variable011** (Estado Psicológico) | Sin nivel asignado (`INC-08`) | **Diferida formalmente (MR-004)** — falta "Clasificación" (tabla de posiciones) en la Base de Conocimiento, y no tiene Nivel asignado |
 
-Esto no se oculta ni se resuelve aquí: cinco de las doce variables oficiales no tienen hoy una ruta de consumo cerrada y confirmada hacia ningún motor. Es especialmente grave para Variable005 por su clasificación Nivel A (la más alta). Se documenta como hallazgo central de esta misión en "Observaciones del Arquitecto".
+Las 2 variables diferidas no se ocultan: quedan documentadas de forma consistente en `docs/03-Variables.md` ("Estado en V1"), `docs/16-Contrato-Oficial-de-Variables.md` y aquí. Compatibilidad Táctica sigue siendo la de mayor severidad conceptual por su Nivel A, pero su ausencia ya no es una omisión sin explicar — es una limitación de datos documentada.
 
 ---
 
@@ -226,8 +228,9 @@ Se consolida la misma regla: **el cálculo continúa**, la variable se entrega m
 | Variable002 | `engine/01`, `engine/02` | Bajo |
 | Variable006 | `engine/01`, `engine/02`, `engine/04`, `engine/05` | **Alto** — es la variable más compartida (4 de 6 motores); en particular, la señal "Rotaciones" aparece de forma independiente en los cuatro documentos, con riesgo de que cada motor la interprete o pondere de forma distinta si se implementara sin pasar por una única Capa de Preparación de Variables |
 | Variable007 | `engine/01`, `engine/02`, `engine/04` | Medio — mismo patrón que Variable006, con "Fatiga"/"Descanso" repetido en los tres |
+| Variable008 | `engine/01`, `engine/02` (MR-004, alcance reducido) | Bajo — ambos consumen solo el componente "profundidad de plantilla", mismo significado |
 
-Ninguna variable de Nivel A (Variable003, 004, 005) es compartida por más de un motor de forma directa — cada una tiene, cuando tiene consumidor, un único motor "dueño" (`engine/01` para Variable003, `engine/02` para Variable004). Variable005 no tiene dueño confirmado (sección 3).
+Ninguna variable de Nivel A (Variable003, 004) activa en V1 es compartida por más de un motor de forma directa — cada una tiene un único motor "dueño" (`engine/01` para Variable003, `engine/02` para Variable004). Variable005 (Nivel A) queda formalmente diferida por MR-004, sin motor asignado (sección 3).
 
 ---
 
@@ -245,7 +248,7 @@ Ninguna de estas observaciones implica refactorizar nada en esta misión — que
 
 # 10. ¿Existe alguna variable cuya importancia declarada no coincida con su utilización real?
 
-**Sí — es el hallazgo central, ya identificado en MS-009 y confirmado aquí de forma independiente** (ver metodología, "Análisis previo obligatorio").
+**Parcialmente — era el hallazgo central de esta misión, ya identificado en MS-009 y confirmado aquí de forma independiente; MR-004 resolvió 3 de las 5 discrepancias originales** (Variable008, 009, 010), dejando solo Variable005 y Variable011 como discrepancias reales entre importancia declarada y utilización, ambas ahora documentadas como diferidas por ausencia de datos, no como omisiones.
 
 | Variable | Importancia declarada (`docs/02-modelo.md`) | Utilización real (`engine/`, esta misión) | ¿Coincide? |
 |---|---|---|---|
@@ -253,13 +256,13 @@ Ninguna de estas observaciones implica refactorizar nada en esta misión — que
 | Variable002 | Nivel A | Consumida por 2 motores directamente, 4 indirectamente | Sí |
 | Variable003 | Nivel A (como "xG") | Consumida por `engine/01` (primaria) | Sí (con inconsistencia de etiqueta ya señalada en MS-009) |
 | Variable004 | Nivel A (como "xGA") | Consumida por `engine/02` (primaria) | Sí (misma nota de etiqueta) |
-| **Variable005** | **Nivel A** | **Sin consumidor confirmado en ningún motor** | **No — la inconsistencia más grave del contrato** |
+| **Variable005** | **Nivel A** | **Diferida formalmente (MR-004) — sin consumidor por ausencia de fuente de datos**, no por omisión | Ya no es una inconsistencia sin explicar, pero sigue siendo la de mayor severidad conceptual: una variable Nivel A no contribuye a V1 |
 | Variable006 | Nivel B | Consumida por 4 motores directamente — la más utilizada de las 12 | Utilización real **superior** a lo que su Nivel B sugeriría |
 | Variable007 | Nivel B | Consumida por 3 motores directamente | Consistente con Nivel B |
-| Variable008 | Nivel C | Sin consumidor | No coincide, aunque de menor severidad (Nivel C, no A) |
-| Variable009 | Nivel D | Sin consumidor | Consistente con su bajo nivel declarado |
-| Variable010 | Nivel D | Sin consumidor; `docs/03-Variables.md` ya advierte "esta variable tendrá poca influencia" | Consistente — la ausencia de consumidor no contradice su propia documentación |
-| Variable011 | Sin nivel asignado | Sin consumidor confirmado | No se puede evaluar coincidencia porque no existe una importancia declarada con la que comparar |
+| Variable008 | Nivel C | Consumida por `engine/01`, `engine/02` (MR-004, alcance reducido) | Sí, ahora consistente |
+| Variable009 | Nivel D | Consumida por `engine/03` (MR-004) | Sí, ahora consistente |
+| Variable010 | Nivel D | Consumida por `engine/05` (MR-004), factor contextual menor; `docs/03-Variables.md` ya advertía "esta variable tendrá poca influencia" | Sí — consistente con su propia documentación |
+| Variable011 | Sin nivel asignado | Diferida formalmente (MR-004) — sin consumidor por ausencia de fuente de datos y de nivel | No se puede evaluar coincidencia porque no existe una importancia declarada con la que comparar |
 | Variable012 | Nivel D | Consumida por `engine/04` | Utilización real **superior** a lo que Nivel D sugeriría, aunque razonable (factores externos son el núcleo de Chaos Index) |
 
 **Conclusión:** la inconsistencia de mayor severidad es **Variable005 (Compatibilidad Táctica)** — Nivel A declarado, cero consumo confirmado. La segunda observación relevante, en sentido inverso, es que **Variable006 (Disponibilidad de Plantilla)** tiene una utilización real (4 motores) más amplia de lo que su Nivel B sugeriría — no es necesariamente un problema, pero vale la pena que una futura revisión de `docs/02-modelo.md` confirme si su nivel de importancia debería reconsiderarse a la luz de cuánto la usan realmente los motores.
@@ -274,13 +277,13 @@ Ninguna de estas observaciones implica refactorizar nada en esta misión — que
 | Variable002 — Rendimiento en el Torneo | `engine/01`, `engine/02` (directo); `engine/03-06` (indirecto) | Ajuste de contexto dentro del torneo actual | Sí (Nivel A), tolera nulo en debut | Detener, salvo debut (continúa con confianza reducida) | Igual que Variable001 |
 | Variable003 — Potencial Ofensivo | `engine/01` (directo, primaria) | Base del cálculo de Fuerza Ofensiva | Sí (Nivel A) | Detener el pipeline | Fuerza Ofensiva → Goles Esperados → Probabilidades → Marcadores → EV |
 | Variable004 — Solidez Defensiva | `engine/02` (directo, primaria) | Base del cálculo de Fuerza Defensiva | Sí (Nivel A) | Detener el pipeline | Igual estructura que Variable003 |
-| Variable005 — Compatibilidad Táctica | **Ninguno confirmado** | No implementado actualmente | Sí en teoría (Nivel A), sin motor que la exija hoy | No aplica — ningún motor la solicita | Ninguno confirmado (ver Observaciones) |
+| Variable005 — Compatibilidad Táctica | **Ninguno — diferida (MR-004)** | No implementado; falta fuente de datos (formación/estilo táctico) | No en V1 (Nivel A nominal, diferida) | No aplica — diferida hasta que exista fuente de datos | Ninguno (diferida, ver `docs/24`) |
 | Variable006 — Disponibilidad de Plantilla | `engine/01`, `engine/02`, `engine/04`, `engine/05` (directo) | Ajuste por lesiones/suspensiones/rotaciones | No (Nivel B) | Continuar, marcar no disponible, propagar a Confidence | Fuerza Ofensiva/Defensiva, Índice de Caos, Índice de Confianza |
 | Variable007 — Fatiga | `engine/01`, `engine/02`, `engine/04` (directo) | Ajuste por desgaste físico/descanso | No (Nivel B) | Continuar, marcar no disponible | Fuerza Ofensiva/Defensiva, Índice de Caos |
-| Variable008 — Calidad de Plantilla | **Ninguno** | No implementado | No (Nivel C) | No aplica | Ninguno (ver Observaciones) |
-| Variable009 — Localía | **Ninguno** | No implementado | No (Nivel D) | No aplica | Ninguno (ver Observaciones) |
-| Variable010 — Historial Directo | **Ninguno** | No implementado | No (Nivel D) | No aplica | Ninguno |
-| Variable011 — Estado Psicológico | **Ninguno confirmado** | No implementado | No (sin nivel asignado) | No aplica | Ninguno confirmado |
+| Variable008 — Calidad de Plantilla | `engine/01`, `engine/02` (directo, MR-004, alcance reducido) | Ajuste por profundidad de plantilla | No (Nivel C) | Continuar, marcar no disponible | Fuerza Ofensiva/Defensiva |
+| Variable009 — Localía | `engine/03-Poisson.md` (directo, MR-004) | Ajuste de goles esperados por condición de local/visitante/neutral | No (Nivel D) | Continuar, marcar no disponible | Goles Esperados → Probabilidades → Marcadores |
+| Variable010 — Historial Directo | `engine/05-Confidence.md` (directo, MR-004) | Factor contextual menor de confianza | No (Nivel D) | Continuar, marcar no disponible | Índice de Confianza |
+| Variable011 — Estado Psicológico | **Ninguno — diferida (MR-004)** | No implementado; falta fuente de datos (clasificación) y Nivel asignado | No en V1 (sin nivel, diferida) | No aplica — diferida hasta que exista fuente de datos | Ninguno (diferida, ver `docs/24`) |
 | Variable012 — Factores Externos | `engine/04` (directo) | Ajuste por clima/viajes | No (Nivel D) | Continuar, marcar no disponible | Índice de Caos |
 
 ---
@@ -338,6 +341,8 @@ Predicción final (consolidada por el Orchestrator, docs/06-Flujo-Operacional.md
 ---
 
 # Observaciones del Arquitecto
+
+*(Actualización MR-004, 2026-07-17): el hallazgo 1 y el hallazgo 2 de esta sección quedaron resueltos, total o parcialmente, por la implementación descrita en `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md` y aplicada en esta misma revisión de este documento — se mantienen íntegros a continuación como registro histórico de cómo se detectaron, con una nota de cierre en cada uno.*
 
 1. **Confirmación independiente del hallazgo de MS-009, con mayor precisión.** El cruce inverso (motor → variable, en lugar de variable → motor) realizado en esta misión confirma exactamente el mismo conjunto de variables sin consumidor: Variable005, 008, 009, 010, 011. La coincidencia entre dos métodos de análisis independientes refuerza la fiabilidad del hallazgo — no es un artefacto de cómo se hizo el cruce en MS-009. Con este análisis se puede además distinguir con más precisión dos grupos: huérfanas **confirmadas sin ambigüedad** (Variable008, 009, 010 — ningún motor las menciona ni siquiera de forma indirecta) y huérfanas **con solapamiento textual ambiguo, no confirmado** (Variable005, 011 — hay lenguaje en `engine/04`/`engine/05` que podría referirse a ellas, pero ningún motor las cita por su nombre oficial).
 2. **Hallazgo nuevo y de mayor severidad: `engine/06-Expected-Value.md` consume `cuotas.csv` directamente de la Base de Conocimiento**, sin pasar por la Capa de Preparación de Variables ni por el Contrato Oficial de Variables (sección 4). Esto contradice el principio central de `docs/15-Capa-de-Preparacion-de-Variables.md`. Es consistente con lo que ya documenta `docs/14-Prediction-Pipeline.md` (que declara que `cuotas.csv` se lee directamente para alimentar `engine/06`), pero nunca se había señalado como una inconsistencia arquitectónica hasta ahora. Se recomienda que una misión futura decida explícitamente entre dos caminos: (a) definir las cuotas como una entrada oficial paralela a las 12 Variables (con su propio contrato, ya que no son una medida de rendimiento deportivo y no encajan naturalmente en `docs/03-Variables.md`), o (b) hacer pasar las cuotas por la Capa de Preparación de Variables como cualquier otro dato de negocio, tratándolas como una "Variable de mercado" distinta de las 12 "Variables de rendimiento".

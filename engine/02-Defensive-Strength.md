@@ -74,6 +74,7 @@ Estas variables aportan contexto al rendimiento defensivo.
 - Rotaciones
 - Fatiga
 - Descanso
+- Calidad de Plantilla propia (MR-004, alcance reducido: solo "profundidad de plantilla" — el componente "valor de mercado" queda diferido, ver `docs/03-Variables.md`)
 
 Estas variables podrán modificar el resultado final cuando exista evidencia suficiente.
 

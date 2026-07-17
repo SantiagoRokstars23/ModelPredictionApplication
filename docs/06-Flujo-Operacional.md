@@ -2,7 +2,7 @@
 
 **Archivo:** `docs/06-Flujo-Operacional.md`
 
-**Versión:** 1.2.0
+**Versión:** 1.3.0
 
 **Estado:** Diseño (Arquitectura) — sin implementación
 
@@ -178,9 +178,9 @@ Antes de invocar cualquier motor, el Predictor invoca la **Capa de Preparación 
 
 El **Predictor** ejecuta el Engine siguiendo el diagrama de dependencias de la sección anterior, y el detalle de `docs/04-Algoritmo.md` (Pasos 4 a 11). En cada motor, `models/` es quien define la fórmula/lógica matemática aplicada y `engine/` es quien la ejecuta con las Variables Oficiales ya preparadas — el Predictor invoca `engine/`, nunca `models/` directamente, porque `models/` no ejecuta, solo investiga y respalda:
 
-1. `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` — consumen las Variables Oficiales ya preparadas (Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo/Solidez Defensiva, Disponibilidad de Plantilla, Fatiga). Se ejecutan en paralelo, uno no depende del otro.
-2. `engine/03-Poisson.md` — consume las salidas de ambos motores anteriores (Fuerza Ofensiva y Defensiva de ambos equipos), no variables directamente.
-3. `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` — consumen las salidas de Poisson y de las Fuerzas, más Variables Oficiales contextuales ya preparadas (Disponibilidad de Plantilla, Fatiga, Factores Externos). Se ejecutan en paralelo entre sí.
+1. `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` — consumen las Variables Oficiales ya preparadas (Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo/Solidez Defensiva, Disponibilidad de Plantilla, Fatiga, Calidad de Plantilla propia con alcance reducido — MR-004). Se ejecutan en paralelo, uno no depende del otro.
+2. `engine/03-Poisson.md` — consume las salidas de ambos motores anteriores (Fuerza Ofensiva y Defensiva de ambos equipos), más la Variable Oficial Localía directamente (MR-004, ajuste de goles esperados por condición de local).
+3. `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` — consumen las salidas de Poisson y de las Fuerzas, más Variables Oficiales contextuales ya preparadas (Disponibilidad de Plantilla, Fatiga, Factores Externos, e Historial Directo para Confidence — MR-004, factor contextual menor). Se ejecutan en paralelo entre sí.
 4. `engine/06-Expected-Value.md` — consume las salidas de Poisson, Chaos Index y Confidence, más las cuotas de mercado (si existen en `data/processed/`). **Excepción documentada, no resuelta:** a diferencia de los cinco motores anteriores, `engine/06` consume las cuotas directamente de `data/processed/`, sin pasar por la Capa de Preparación de Variables ni formar parte del Contrato Oficial de Variables — contradicción funcional ya identificada como `INC-05` (`docs/18-Plan-de-Reconciliacion-Arquitectonica.md`, `docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md`). Resolverla requiere una decisión de diseño (modelar las cuotas como variable oficial o hacerlas pasar por la Capa) fuera del alcance de esta reconciliación editorial.
 
 ## Fase 4 — Valor Esperado (condicional)

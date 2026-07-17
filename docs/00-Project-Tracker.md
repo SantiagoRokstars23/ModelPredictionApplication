@@ -22,15 +22,16 @@ Es un documento **vivo**: deberá actualizarse cada vez que se inicie, avance o 
 - **% Avance** es una estimación del propio autor de la misión al momento de la última actualización, no una métrica calculada automáticamente.
 - **Dependencias** lista las misiones que deben estar `Completada` antes de que esta pueda iniciarse (o antes de que sus resultados sean confiables).
 - Las fechas usan el formato `YYYY-MM-DD` (`docs/05-Base-de-Conocimiento.md`).
-- Desde MR-001 el proyecto usa **series de numeración independientes** por tipo de misión: `MS-NNN` para misiones de **diseño** (avanzan la arquitectura), `MR-NNN` para misiones de **reconciliación del Engine** (corrigen inconsistencias ya detectadas en el Engine y su entorno inmediato), `AR-NNN` para **auditorías de congelamiento arquitectónico** (revisiones independientes y adversariales que intentan refutar que un inventario de inconsistencias esté completo), `GR-NNN` para **reconciliación de gobernanza documental** (corrigen inconsistencias en los documentos que gobiernan el proyecto) y, desde GOV-001, `GOV-NNN` para **gobernanza constitucional** (define principios estables de máxima autoridad conceptual, no técnica). Se listan en tablas separadas más abajo.
+- Desde MR-001 el proyecto usa **series de numeración independientes** por tipo de misión: `MS-NNN` para misiones de **diseño** (avanzan la arquitectura), `MR-NNN` para misiones de **reconciliación del Engine** (corrigen inconsistencias ya detectadas en el Engine y su entorno inmediato), `AR-NNN` para **auditorías de congelamiento arquitectónico** (revisiones independientes y adversariales que intentan refutar que un inventario de inconsistencias esté completo), `GR-NNN` para **reconciliación de gobernanza documental** (corrigen inconsistencias en los documentos que gobiernan el proyecto), `GOV-NNN` para **gobernanza constitucional** (define principios estables de máxima autoridad conceptual, no técnica), `IMP-NNN` para **implementación conceptual** (sintetiza la arquitectura ya estable en trazados operativos de extremo a extremo) y, desde MAP-001, `MAP-NNN` para **mapas de navegación** (vistas de alto nivel para orientar a un lector nuevo, sin redefinir nada). Se listan en tablas separadas más abajo.
+- **Nota práctica:** varios briefs recientes han reutilizado identificadores ya asignados a otra misión (`MR-002` dos veces, `MR-005`, `GOV-001`). Antes de asignar un identificador nuevo, conviene revisar este documento — la sección correspondiente a cada serie lista los identificadores ya reservados.
 
 ---
 
 # Resumen general del proyecto
 
-**Porcentaje global de avance:** ~60%
+**Porcentaje global de avance:** ~72%
 
-**Veredicto de Architecture Freeze:** No declarable todavía, pero muy cerca. De las 5 críticas identificadas por AR-002 (INC-01, INC-04, INC-05, INC-18, INC-21), **3 ya están resueltas** (INC-18/INC-21 por GR-002; INC-01 por MR-003) — quedan solo **2 críticas abiertas: INC-04 e INC-05**, ambas dentro de `engine/`, ambas requieren una decisión de diseño real (no solo edición). De los 7 criterios objetivos de `docs/23` (Parte 6), ahora **4 de 7 cumplidos** (Orden de Lectura completo, referencias cruzadas de `engine/` correctas, variables con consumidor o nota documentada, Arquitecto Estadístico sin ambigüedad — este último recién completado por `MR-003`). Próximo paso: `MR-004` (huérfanas, cuotas, rotaciones — resuelve INC-04/INC-05, las 2 críticas restantes) y `GR-003` (`data/README.md`).
+**Veredicto de Architecture Freeze:** No declarable todavía, pero de las 5 críticas originales de AR-002 ya quedan **4 resueltas** (INC-18/INC-21 por GR-002; INC-01 por MR-003; INC-04 completamente resuelto por la implementación de MR-004). Solo queda **INC-05**, y solo en su implementación completa — el principio arquitectónico ya está fijado (las cuotas nunca serán una Variable Oficial), pero `engine/06` todavía lee `cuotas.csv` directamente en espera del futuro Contrato de Datos de Mercado. De los 7 criterios objetivos de `docs/23` (Parte 6), se mantiene formalmente en **4 de 7** (el criterio 5, "ningún motor accede a `data/processed/` directamente", sigue sin cumplirse por esta única excepción ya documentada) — pero el criterio 1 ("cero críticas sin resolver") está a un solo paso de cumplirse. Próximo paso: diseñar el Contrato de Datos de Mercado (cierra INC-05 del todo), resolver INC-06 (Rotaciones), y `GR-003` (`data/README.md`).
 
 **Veredicto de madurez del Engine (MR-001):** el diseño lógico del Engine está completo, pero **no listo para implementación** hasta resolver las 3 inconsistencias críticas inventariadas (ver "Registro de misiones de reconciliación" más abajo: MR-002 a MR-004).
 
@@ -61,6 +62,16 @@ Es un documento **vivo**: deberá actualizarse cada vez que se inicie, avance o 
 - **Primera reconciliación real ejecutada** (`GR-002`): `CLAUDE.md` y `README.md` actualizados — Orden de Lectura autoactualizable, distinción IA/Humano en "Tu Rol", mención de la Capa de Preparación de Variables, principios completos, índice de `docs/` hasta la posición 23.
 - **Segunda reconciliación real ejecutada** (`MR-002`): los 6 documentos de `engine/` reconciliados editorialmente — referencias cruzadas corregidas y verificadas con `grep`, referencias a motores futuros anotadas explícitamente, estructura de `engine/01` alineada con sus 5 pares.
 - **Tercera reconciliación real ejecutada** (`MR-003`): `docs/06-Flujo-Operacional.md` y `docs/14-Prediction-Pipeline.md` ahora integran explícitamente la Capa de Preparación de Variables y distinguen Arquitecto Estadístico IA/Humano — `INC-01`, `INC-02` e `INC-20` quedan completamente resueltos en el texto.
+- **Análisis arquitectónico de INC-04/INC-05** (`docs/24`, fase de análisis de MR-004): revela que 3 de las 5 variables huérfanas ya tienen datos completos (solo falta wiring) mientras 2 carecen de fuente de datos real en el esquema actual; recomienda tratar las cuotas como una categoría de datos de mercado paralela a las Variables Oficiales.
+- **Cuarta reconciliación real ejecutada** (fase de implementación de `MR-004`): Localía, Historial Directo y Calidad de Plantilla (alcance reducido) ganan consumidor oficial en `engine/03`/`05`/`01`+`02`; Compatibilidad Táctica y Estado Psicológico quedan clasificadas formalmente como "Pendiente de futura investigación" en `docs/03`/`docs/16`/`docs/17`; principio arquitectónico de Datos de Mercado establecido para las cuotas — `INC-04` resuelto, `INC-05` resuelto en principio.
+- **Primer trazado de implementación conceptual** (`IMP-001`): objeto de entrada, traza numérica de ejemplo y objeto de respuesta completo del Prediction Pipeline, con dos campos (`jugadores_destacados`, `mercados_detectados`) documentados explícitamente como fuera del alcance del Engine V1 actual, no inventados.
+- **Mapa Maestro del proyecto** (`docs/99-Mapa-Maestro.md`, `MAP-001`): vista de alto nivel navegable en menos de diez minutos, categoriza los 26 documentos de `docs/` sin duplicar el listado de `README.md`.
+- **Runtime Oficial** (`docs/26-Runtime-del-Modelo.md`, `DEV-001`): especificación de ejecución independiente del lenguaje, con el primer Objeto de Contexto formalizado (solo-anexado) y el primer registro de eventos de ejecución (logs) del proyecto.
+- **Primera investigación matemática real de `models/`** (`models/offensive-strength.md`, `MODEL-001`): fórmula estructural de Fuerza Ofensiva, fundamentada en Maher (1982)/Dixon-Coles (1997), sin pesos numéricos (pendientes de calibración). Detecta que "grandes oportunidades" no existe en el esquema de datos actual.
+- **Auditoría completa de datos pendientes** (`docs/27-Auditoria-de-Variables-Pendientes.md`, `DATA-001`): clasifica ~46 datos necesarios de las 12 variables en A-E; encuentra que "Clima" (variable ya activa) no existe en ningún CSV, y que no hay tabla de alineación titular por partido.
+- **Catálogo de Variables Derivadas** (`docs/28-Catalogo-de-Variables-Derivadas.md`, `DATA-002`): 27 cantidades calculadas centralizadas en 6 categorías; revela que solo 2 alcanzan el estado "Diseñada" completo.
+- **Segunda investigación matemática real** (`models/defensive-strength.md`, `MODEL-002`): reutiliza deliberadamente `M_forma`/`Pen` de `MODEL-001` para no duplicar variables compartidas; su término base no tiene ningún componente bloqueado, a diferencia de Offensive Strength.
+- **Núcleo probabilístico completo** (`models/poisson.md`, `MODEL-003`): define por primera vez el mecanismo matemático exacto detrás de Probabilidad Local/Empate/Visitante y Top 4 de marcadores; documenta explícitamente por qué V1 no adopta la corrección de Dixon-Coles.
 
 ## Módulos en desarrollo
 
@@ -86,6 +97,8 @@ Es un documento **vivo**: deberá actualizarse cada vez que se inicie, avance o 
 | `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` documentan internamente pasos de obtención/validación/normalización que ahora duplican la responsabilidad de `docs/15-Capa-de-Preparacion-de-Variables.md` (MS-008), y ambos comparten variables de entrada (ej. Forma Reciente) sin una fuente única | Si se implementa código directamente sobre el texto actual de los motores, se fijaría la duplicación y el riesgo de cálculos inconsistentes entre motores | Misión editorial futura que actualice `engine/01-06` para asumir como precondición la salida de la Capa de Preparación de Variables (ver "Próxima misión recomendada" de MS-008) |
 | 5 de las 12 variables oficiales (Compatibilidad Táctica, Calidad de Plantilla, Localía, Historial Directo, Estado Psicológico) no tienen consumidor explícito declarado en ningún `engine/0X.md` — Compatibilidad Táctica es Nivel A en `docs/02-modelo.md` pese a ello, y Estado Psicológico no tiene nivel asignado (MS-009, confirmado independientemente en MS-010) | Riesgo de que variables consideradas importantes en `docs/02-modelo.md`/`docs/03-Variables.md` nunca se implementen realmente en ningún motor, o se implementen sin criterio explícito de cuál motor las usa | Misión editorial de `engine/` (ver MS-008/MS-009/MS-010) que asigne consumidor explícito a cada una, y revisión de `docs/02-modelo.md` para clasificar a Estado Psicológico |
 | `engine/06-Expected-Value.md` consume `cuotas.csv` directamente de la Base de Conocimiento, sin pasar por la Capa de Preparación de Variables ni por el Contrato Oficial de Variables (MS-010) | Contradice el principio de desacoplamiento central de MS-008; si se implementa código sobre el texto actual, el Engine quedaría acoplado a la Base de Conocimiento en al menos un punto | Misión futura que decida si las cuotas se modelan como una entrada oficial paralela a las 12 Variables o se hacen pasar por la Capa de Preparación de Variables como cualquier otro dato |
+| "Grandes oportunidades" (uno de los 5 "Datos necesarios" de Variable003 en `docs/03-Variables.md`) no existe como campo en ningún CSV de `data/processed/selecciones-nacionales/`; "conversión" requiere cálculo derivado (`MODEL-001`) | La fórmula de Fuerza Ofensiva solo puede construirse con 3 de sus 5 componentes declarados hasta que se amplíe el esquema | Evaluar en una futura misión de datos si se agrega el campo a `estadisticas_partido.csv`, o si se acepta el índice con 3 componentes de forma permanente |
+| "Clima" (Variable012, ya activa vía `engine/04`) no tiene ningún campo en ningún CSV; no existe tabla de alineación titular por partido, lo que bloquea "Rotaciones" de Variable006 (la variable más compartida de las 12) (`DATA-001`) | Una variable en uso hoy tiene un componente sin fuente de datos; "Rotaciones" afecta a los 4 motores que consumen Variable006 | Misión de captura de datos priorizada por `DATA-001`: primero "Grandes oportunidades" (más barato), luego tabla de alineación por partido |
 | El Engine (v2.0) no tiene todavía respaldo matemático completo en `models/` para Chaos Index ni Confidence | Riesgo de implementar fórmulas sin investigación previa, violando `CLAUDE.md` ("Investigación antes de implementación") | No iniciar la v2.0 de esos motores sin el documento de `models/` correspondiente |
 | Inconsistencias editoriales ya detectadas en `engine/04-Chaos-Index.md` y `engine/05-Confidence.md` (numeración interna y referencias a archivos inexistentes) | Puede inducir errores si se usan como referencia sin revisar | Programar una misión editorial dedicada antes de tocar esos motores |
 | Alta dependencia de coordinación manual entre misiones (numeración de `docs/`, referencias cruzadas) | Cada nueva misión que inserta un documento numerado obliga a renumerar y actualizar referencias en varios archivos | Preferir, cuando sea posible, agregar documentos al final de la secuencia en lugar de insertarlos; este tracker debe usarse para detectar el conflicto antes de crear el archivo |
@@ -247,15 +260,19 @@ Serie independiente de `MS-`, iniciada en MR-001. Una misión `MR-` nunca agrega
 
 ## MR-004 — Cierre de huérfanas, desacoplamiento de cuotas y eliminación de duplicidad en `engine/`
 
-- **Estado:** Pendiente
-- **Dependencias:** MR-002, MR-003
+- **Estado:** En progreso (fase de análisis e implementación de INC-04/INC-05 completadas; INC-06 pendiente)
+- **Dependencias:** MR-002 (Completada), MR-003 (Completada)
 - **Objetivo (definido en MR-001):** Declarar consumidor explícito de Variable005/008/009/010/011 o justificar su no uso; decidir el tratamiento de `cuotas.csv` en `engine/06`; centralizar la señal "Rotaciones" en la Capa de Preparación de Variables.
+- **Fase de análisis (2026-07-17):** Se crea `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`. Verificado directamente contra los CSV reales: 3 de las 5 variables huérfanas tienen datos completos hoy (Localía, Historial Directo, Calidad de Plantilla parcial); 2 (Compatibilidad Táctica —Nivel A—, Estado Psicológico) carecen de fuente de datos real en el esquema actual.
+- **Fase de implementación (2026-07-17, esta misión, solicitada como "MR-005" — identificador ya reservado con otro objetivo, ejecutada como continuación de MR-004):** Aplicadas las recomendaciones de `docs/24`. `INC-04` **resuelto**: Localía → `engine/03-Poisson.md`; Historial Directo → `engine/05-Confidence.md`; Calidad de Plantilla → `engine/01`/`02` (alcance reducido); Compatibilidad Táctica y Estado Psicológico clasificadas consistentemente como "Pendiente de futura investigación" (no "Diferida a V2" — la categoría correcta, porque el bloqueo es de datos, no de prioridad) en `docs/03`, `docs/16` y `docs/17`. `INC-05` **resuelto en principio, no en implementación completa**: se formaliza que las cuotas nunca serán una 13ª Variable Oficial, sino una categoría de Datos de Mercado paralela preparada por `docs/15` — sin diseñar el contrato completo (fuera de alcance); `engine/06` sigue leyendo `cuotas.csv` directamente, ahora con la excepción anotada explícitamente. `INC-06` (Rotaciones) sigue sin resolver — explícitamente fuera del alcance de este brief.
+- **Próxima misión recomendada:** Resolver `INC-06` (centralizar "Rotaciones" en la Capa); diseñar el Contrato de Datos de Mercado completo para implementar `INC-05` de forma total; una misión `MS-` de diseño de datos para capturar formación táctica y clasificación/tabla de posiciones, condición previa para reconsiderar Compatibilidad Táctica y Estado Psicológico.
 
 ## MR-005 — Reconciliación de `docs/02-modelo.md` con la utilización real de variables
 
 - **Estado:** Pendiente
 - **Dependencias:** MR-004
 - **Objetivo (definido en MR-001):** Clasificar a Variable011 en un Nivel A-D; revisar el Nivel B de Variable006; agregar nota cruzada de equivalencia terminológica xG/xGA ↔ Potencial Ofensivo/Solidez Defensiva.
+- **Nota:** un brief posterior, también nombrado "MR-005", pedía implementar las recomendaciones de `docs/24` (INC-04/INC-05) — se ejecutó como fase de implementación de `MR-004` (ver esa entrada), no aquí, para no reservar dos objetivos bajo el mismo identificador. Este `MR-005` (reconciliación de `docs/02-modelo.md`) sigue vigente sin cambios, y ahora depende de un `MR-004` más completo de lo que tenía cuando se definió originalmente.
 
 ## MR-006 — Formalización de la frontera Statistician / Capa de Preparación de Variables
 
@@ -378,6 +395,116 @@ Serie independiente de `MS-`/`MR-`/`AR-`/`GR-`, iniciada en GOV-001. Una misión
 - **Fecha de finalización:** 2026-07-17
 - **Observaciones:** Se crea `docs/22-Manual-Operativo-del-Arquitecto-IA.md`. Formaliza el protocolo operativo del Arquitecto IA (rol y límites, flujo de misión, listas de verificación previa/durante/cierre, sincronización documental, gestión de hallazgos, autocrítica estructurada, restricciones permanentes), aclarando explícitamente que no gobierna a los 6 agentes de `.claude/agents/` (esos operan predicciones individuales bajo `docs/06`; este manual gobierna al Arquitecto IA que ejecuta misiones `MS-`/`MR-`/`AR-`/`GR-`/`GOV-` sobre el propio repositorio). Extiende el "Cierre obligatorio" de 4 a 6 preguntas (añade impacto sobre el riesgo arquitectónico e impacto cualitativo sobre el IMA). Identifica que la "Autocrítica" estructurada (sección 8) nunca se había ejecutado antes de forma explícita en ninguna misión anterior, y que la "Gestión de hallazgos" (sección 7) ya había ocurrido dos veces (`INC-18`, `INC-20`) sin una regla explícita sobre si debía alterar el roadmap. No modifica ningún documento existente, incluida la Constitución.
 - **Próxima misión recomendada:** Aplicar este manual como protocolo estándar en toda misión futura, comenzando por `GR-002`; considerar si `CLAUDE.md`/`README.md` deben referenciarlo junto a la Constitución al reconciliarse.
+
+---
+
+# Registro de implementación conceptual (IMP-)
+
+Serie independiente de `MS-`/`MR-`/`AR-`/`GR-`/`GOV-`, iniciada en IMP-001. Una misión `IMP-` no diseña arquitectura nueva ni reconcilia inconsistencias — sintetiza documentos ya estables en un trazado operativo de extremo a extremo, como paso previo a que exista implementación de código real.
+
+## IMP-001 — Diseño del Prediction Pipeline del Modelo Santiago
+
+- **Estado:** Completada
+- **% Avance:** 100%
+- **Dependencias:** `docs/06`, `docs/14`, `docs/15`, `docs/16`, `docs/17` (todas Completadas) — sintetiza sin redefinir
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Se crea `docs/25-Trazado-de-Ejecucion-del-Prediction-Pipeline.md`. El brief referenciaba una ruta obsoleta (`docs/05-Flujo-Operacional.md`); se usó la ruta correcta (`docs/06`). Dado el fuerte solapamiento con `docs/06`/`docs/14`, se diseñó como síntesis (referencia, no repite) y se concentró el aporte original en: el objeto de entrada exacto (nunca antes definido), una traza numérica de ejemplo (reutiliza el ejemplo España-Francia de `docs/08-predicciones.md`), y el objeto de respuesta completo. Documenta explícitamente que `jugadores_destacados` y `mercados_detectados` (pedidos por el brief como ejemplo) **exceden lo que el Engine V1 puede producir hoy** — ningún motor opera a nivel de jugador, `engine/06` no escanea mercados proactivamente — y los deja como brecha explícita en vez de inventarles un origen. Confirma las 4 validaciones obligatorias sin excepción no documentada.
+- **Próxima misión recomendada:** Primera investigación matemática real en `models/` (empezando por `models/poisson.md`); en paralelo, `INC-06` (Rotaciones) y el Contrato de Datos de Mercado (`MR-004`).
+
+---
+
+# Registro de mapas de navegación (MAP-)
+
+Serie independiente de `MS-`/`MR-`/`AR-`/`GR-`/`GOV-`/`IMP-`, iniciada en MAP-001. Una misión `MAP-` no diseña, reconcilia, audita ni implementa — produce una vista de alto nivel para orientar a un lector nuevo, sin redefinir nada de lo que resume.
+
+## MAP-001 — Mapa Maestro de la Arquitectura del Modelo Santiago
+
+- **Estado:** Completada
+- **% Avance:** 100%
+- **Dependencias:** Todo el repositorio (resume, no redefine)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Se crea `docs/99-Mapa-Maestro.md` (ruta exacta pedida por el brief, fuera de la secuencia 00-25 a propósito). Solicitada como "GOV-001" (ya usado por la Constitución); registrada como `MAP-001`. Categoriza los 26 documentos de `docs/` sin repetir el listado archivo-por-archivo de `README.md`; el estado del componente "Estado Actual" se basa exclusivamente en este mismo Project Tracker, sin porcentajes nuevos. No modifica ningún documento existente.
+- **Próxima misión recomendada:** La misma que recomienda `IMP-001` — primera investigación matemática real en `models/`.
+
+---
+
+# Registro de diseño de ejecución (DEV-)
+
+Serie independiente de `MS-`/`MR-`/`AR-`/`GR-`/`GOV-`/`IMP-`/`MAP-`, iniciada en DEV-001. Una misión `DEV-` especifica **cómo** se ejecutará el sistema (Runtime, independiente del lenguaje) — distinta de `IMP-`, que sintetiza trazados operativos de la arquitectura ya existente sin formalizar un modelo de ejecución nuevo.
+
+## DEV-001 — Runtime Oficial del Modelo Santiago
+
+- **Estado:** Completada
+- **% Avance:** 100%
+- **Dependencias:** `docs/06`, `docs/14`, `docs/15`, `docs/16`, `docs/17`, `docs/25`, `docs/99` (todas Completadas) — sintetiza sin redefinir
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Se crea `docs/26-Runtime-del-Modelo.md`, sin colisión de numeración. Corrige, antes de escribir, una discrepancia entre el diagrama de ejemplo del brief (Engine lineal `01→02→03→04→05→06`) y la arquitectura por capas ya verificada en `docs/06`/`docs/17`/`docs/25` (Capa 1: `01`+`02` en paralelo; Capa 3: `04`+`05` en paralelo) — se usa el orden por capas para no contradecir esos tres documentos, cumpliendo la validación 5 exigida por el propio brief. Formaliza, por primera vez, el **Objeto de Contexto** (estructura de solo-anexado que viaja durante toda la ejecución) y el **registro de ejecución (logs)** — ambos aportes genuinamente nuevos, el resto del documento referencia sin duplicar. Confirma en el cierre que la arquitectura de ejecución está lista pero la V0.1 real no, por ausencia de fórmulas matemáticas reales en `models/`.
+- **Próxima misión recomendada:** Primera investigación matemática real en `models/poisson.md` — bloqueante compartido con `IMP-001` y `MAP-001`.
+
+---
+
+# Registro de investigación matemática (MODEL-)
+
+Serie independiente de `MS-`/`MR-`/`AR-`/`GR-`/`GOV-`/`IMP-`/`MAP-`/`DEV-`, iniciada en MODEL-001. Una misión `MODEL-` desarrolla el contenido real de `models/` — la investigación estadística que `CLAUDE.md` exige antes de que cualquier motor de `engine/` pueda implementar una fórmula ("Investigación antes de implementación").
+
+## MODEL-001 — Modelo Matemático de Fuerza Ofensiva
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura de la fórmula; calibración de pesos queda para una misión futura con datos reales)
+- **Dependencias:** `engine/01`, `docs/03`, `docs/16`, `docs/17`, `docs/02-modelo.md` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** `models/offensive-strength.md` evoluciona de stub a especificación matemática completa — primer documento de `models/` en hacerlo. Propone `Fuerza Ofensiva = clip(P · M_forma · (1 − Pen), 0, 100)`, con las 6 Variables Oficiales ya asignadas a `engine/01` por `docs/17`, sin pesos numéricos (solo rol estructural, conforme a "Nunca alterar pesos sin evidencia estadística"). Detecta, verificando directamente el esquema real, que "grandes oportunidades" (uno de los 5 datos declarados para Variable003 en `docs/03`) no existe en ningún CSV del módulo, y que "conversión" requiere un cálculo derivado — documentado como limitación, no oculto ni resuelto. Fundamentada en Maher (1982) y Dixon-Coles (1997), con diferencia metodológica explicitada honestamente. No modifica `engine/01`, el Runtime, el Pipeline, las Variables Oficiales ni `learning/`.
+- **Próxima misión recomendada:** `models/poisson.md` (siguiente en la cadena de dependencias — `engine/03` consume directamente la salida de este modelo).
+
+---
+
+# Registro de auditoría de datos (DATA-)
+
+Serie independiente de las demás, iniciada en DATA-001. Una misión `DATA-` cruza la especificación de variables/motores contra el esquema real de la Base de Conocimiento — audita, no diseña ni implementa.
+
+## DATA-001 — Auditoría Completa de Variables Pendientes
+
+- **Estado:** Completada
+- **% Avance:** 100%
+- **Dependencias:** `docs/03`, `docs/16`, `docs/17`, `MODEL-001` (todas Completadas) — la origina el hallazgo de "Grandes oportunidades" en `MODEL-001`
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Se crea `docs/27-Auditoria-de-Variables-Pendientes.md`. Verifica los 11 CSV reales y confirma que `data/raw/` no tiene datos. Clasifica ~46 datos necesarios en A-E; 8 en categoría D (deben capturarse), 2 en B, 13 en C (ya derivables sin tocar la Base de Conocimiento). Dos hallazgos nuevos: "Posesión" (Variable005) sí existe, contra lo asumido; "Clima" (Variable012, variable ya activa) no existe en ningún CSV. Detecta que no existe tabla de alineación titular por partido (bloquea "Rotaciones", la variable más compartida) y que `estado_convocatoria` nunca formalizó su ENUM. Clasifica "Presión competitiva" como E, justificado. No modifica nada — solo audita.
+- **Próxima misión recomendada:** Misión de diseño de datos (`MS-` o `DATA-002`) que capture, en orden de prioridad: "Grandes oportunidades" (más barato), una tabla de alineación por partido (resuelve Rotaciones y sienta base para Minutos jugados), y una evaluación de viabilidad real de Compatibilidad Táctica completa.
+
+## DATA-002 — Catálogo Oficial de Variables Derivadas
+
+- **Estado:** Completada
+- **% Avance:** 100%
+- **Dependencias:** DATA-001, MODEL-001, `docs/15`, `docs/16`, `docs/17`, `docs/26` (todas Completadas) — las centraliza sin redefinirlas
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Se crea `docs/28-Catalogo-de-Variables-Derivadas.md` (el brief pedía `docs/27`, ya ocupado por `DATA-001` — colisión de archivo, no solo de identificador de misión). Cataloga 27 cantidades calculadas en 6 categorías. Aclara una colisión de terminología real entre "Variable Contextual" (este catálogo, por procedencia del dato) y "Variables Contextuales" (`engine/01`/`02`, por rol dentro de su propia fórmula). Verifica que "Índice disciplinario" e "Índice de lesiones" (ejemplos del propio brief) no existían en ningún documento previo — se catalogan como tal, sin fingir que ya estaban definidos. Solo 2 de 27 entradas en estado "Diseñada" completo; 6 "Parcial"; 19 "Pendiente" — panorama más preciso que la impresión previa de "Engine mayormente listo". No modifica nada de lo que cataloga.
+- **Próxima misión recomendada:** `MODEL-002` (`models/defensive-strength.md`, siguiente motor en la cadena, con xGA ya definido como sub-componente listo); o una misión que decida si "Índice disciplinario"/"Índice de lesiones" valen la pena diseñarse, dado que no tenían precedente.
+
+## MODEL-002 — Modelo Matemático de Defensive Strength
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura; calibración pendiente, igual que `MODEL-001`)
+- **Dependencias:** MODEL-001, `engine/02`, `docs/03`, `docs/17`, `docs/28` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Brief pedía `models/02-defensive-strength.md`, ruta que no existe (`models/` no usa prefijos numéricos) — se evolucionó `models/defensive-strength.md`, el archivo real. Propone `Fuerza Defensiva = clip(P_def · M_forma · (1 − Pen), 0, 100)`, **reutilizando explícitamente** `M_forma`/`Pen` de `MODEL-001` en lugar de redefinirlos, para no duplicar el cálculo de variables ya compartidas (Var001/002/006/007/008) entre `engine/01` y `engine/02` — riesgo ya señalado genéricamente en `docs/15`/`docs/17`, evitado aquí por diseño. Detecta una discrepancia real entre `engine/02` ("Grandes Oportunidades Concedidas") y el contrato oficial de Variable004 en `docs/03` (no la incluye) — documentada, no corregida. A diferencia de `MODEL-001`, el término base de esta fórmula (Variable004) **no tiene ningún componente bloqueado** — los 4 son derivables hoy (`docs/27`). Ningún peso numérico fijado.
+- **Próxima misión recomendada:** `models/poisson.md` — con dos de los tres motores base completos, es el siguiente eslabón real de la cadena de cálculo.
+
+## MODEL-003 — Modelo Matemático de Poisson
+
+- **Estado:** Completada
+- **% Avance:** 100% (estructura; calibración de `μ_gol`/`κ`/`κ'` pendiente)
+- **Dependencias:** MODEL-001, MODEL-002, `engine/03`, `docs/17`, `docs/28` (todas Completadas)
+- **Fecha de inicio:** 2026-07-17
+- **Fecha de finalización:** 2026-07-17
+- **Observaciones:** Desarrolla el núcleo probabilístico: `λ` como combinación multiplicativa cruzada (ataque propio × defensa rival, nunca la propia) más ajuste de Localía — estructura de Maher (1982). Documenta explícitamente que la corrección de Dixon-Coles (1997) para marcadores bajos no se adopta en V1 por falta de historial para estimar `ρ`. Define por primera vez el mecanismo exacto detrás de "Probabilidad Local/Empate/Visitante" y "Top 4 de marcadores", que `docs/06`/`14`/`25`/`26` exigían sin definir cómo se calculaban: se derivan de una única matriz de probabilidades conjuntas. Ningún parámetro numérico fijado.
+- **Próxima misión recomendada:** `models/chaos-index.md` o `models/confidence.md` — ambos pueden desarrollarse ahora que Poisson define su entrada principal, sin depender uno del otro.
 
 ---
 

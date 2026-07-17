@@ -52,6 +52,8 @@ Además utilizará:
 - Mercado seleccionado.
 - Tipo de apuesta.
 
+**Nota arquitectónica (MR-004):** las cuotas nunca serán una Variable Oficial de `docs/16-Contrato-Oficial-de-Variables.md` (son datos de mercado, no de rendimiento deportivo). Se tratarán, en una implementación futura, como una categoría de **Datos de Mercado** preparada por la Capa de Preparación de Variables (`docs/15`), paralela a las Variables Oficiales, con su propio contrato todavía sin diseñar. Hasta que ese contrato exista, este motor continúa consumiendo `cuotas.csv` directamente — excepción documentada (`INC-05`), resuelta en principio, pendiente de implementación completa.
+
 ---
 
 # Mercados Compatibles

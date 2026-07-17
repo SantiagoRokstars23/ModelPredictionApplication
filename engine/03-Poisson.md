@@ -60,6 +60,10 @@ El motor recibe información proveniente de otros motores.
 - Fuerza Ofensiva
 - Fuerza Defensiva
 
+## Contextual
+
+- Localía (Variable009, MR-004) — ajusta el cálculo de goles esperados según la condición de local, visitante o sede neutral. Se consume directamente de la Capa de Preparación de Variables (`docs/15-Capa-de-Preparacion-de-Variables.md`), no de los otros motores.
+
 ---
 
 # Dependencias

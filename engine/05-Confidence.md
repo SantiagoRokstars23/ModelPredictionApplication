@@ -51,6 +51,7 @@ Además podrá considerar:
 - Suspensiones.
 - Rotaciones esperadas.
 - Estado físico de los equipos.
+- Historial Directo (Variable010, MR-004) — factor contextual menor; nunca deberá dominar el cálculo (`docs/03-Variables.md`).
 
 ---
 

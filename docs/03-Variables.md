@@ -246,6 +246,10 @@ El modelo deberá considerar esa interacción.
 
 Pendiente.
 
+## Estado en V1 (MR-004)
+
+**Pendiente de futura investigación.** No existe todavía, en la Base de Conocimiento (`data/processed/selecciones-nacionales/`), ninguna fuente de datos para Formación/Estilo de presión/Juego directo/Contraataque. Se requiere una misión de diseño de esquema de datos antes de poder asignarle un motor — no forma parte del consumo activo de `engine/` en V1. Ver `docs/24-Analisis-Arquitectonico-INC-04-INC-05.md` y `docs/16-Contrato-Oficial-de-Variables.md`.
+
 ---
 
 # Variable 006
@@ -312,6 +316,10 @@ Medir el potencial general del equipo.
 
 Pendiente.
 
+## Estado en V1 (MR-004)
+
+**Activa en V1, con alcance reducido.** Consumida por `engine/01-Offensive-Strength.md` y `engine/02-Defensive-Strength.md` únicamente en su componente "profundidad de plantilla" (derivable de `convocatorias.csv` + `jugadores.csv`). El componente "valor de mercado" queda diferido: no existe ese campo en ningún archivo de la Base de Conocimiento actual.
+
 ---
 
 # Variable 009
@@ -327,6 +335,10 @@ Determinar el efecto de jugar como local.
 ## Observación
 
 En torneos en sede única esta variable podrá tener poco o ningún peso.
+
+## Estado en V1 (MR-004)
+
+**Activa en V1.** Consumidor asignado: `engine/03-Poisson.md` — ajusta el cálculo de goles esperados según la condición de local, visitante o sede neutral. Dato completo y disponible hoy en `partidos.csv`/`estadios.csv`/`torneos.csv`.
 
 ---
 
@@ -345,6 +357,10 @@ Registrar enfrentamientos anteriores entre ambos equipos.
 Esta variable tendrá poca influencia.
 
 Nunca deberá dominar el modelo.
+
+## Estado en V1 (MR-004)
+
+**Activa en V1.** Consumidor asignado: `engine/05-Confidence.md`, como factor contextual menor — consistente con la autolimitación ya declarada arriba. Dato completo y disponible hoy en `partidos.csv`.
 
 ---
 
@@ -368,6 +384,10 @@ Representar factores emocionales medibles.
 No se utilizarán interpretaciones subjetivas.
 
 Solo hechos verificables.
+
+## Estado en V1 (MR-004)
+
+**Pendiente de futura investigación.** Dos de sus cuatro datos necesarios (Racha de victorias, Eliminación reciente) son derivables hoy de `partidos.csv`/`torneos.csv`, pero "Clasificación" (tabla de posiciones) no existe en ningún archivo de la Base de Conocimiento. Además, esta variable no tiene todavía un Nivel de importancia asignado en `docs/02-modelo.md` (inconsistencia ya identificada, ver `docs/23`, INC-08). Ambas condiciones deben resolverse antes de asignarle un motor — no forma parte del consumo activo de `engine/` en V1.
 
 ---
 

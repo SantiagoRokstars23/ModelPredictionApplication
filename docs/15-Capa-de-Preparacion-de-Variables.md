@@ -2,7 +2,7 @@
 
 **Archivo:** `docs/15-Capa-de-Preparacion-de-Variables.md`
 
-**Versión:** 1.0.0
+**Versión:** 1.1.0
 
 **Estado:** Especificación oficial — Arquitectura (sin implementación)
 
@@ -324,6 +324,12 @@ Durante el análisis de esta misión se detectaron las siguientes oportunidades 
 5. **Frontera con el Statistician.** El Statistician ya valida datos en la Fase 2 de `docs/06-Flujo-Operacional.md`, pero a nivel de *suficiencia* (¿hay evidencia suficiente para intentar una predicción?). Esta capa valida a nivel de *construcción* (¿este dato puntual permite construir esta variable puntual?). Ambas validaciones son necesarias y no se solapan si se mantiene esta distinción, pero conviene que una futura revisión de `.claude/agents/statistician.md` deje esta frontera explícita en el propio archivo del agente (hoy no la menciona), para que no se preste a interpretación.
 
 Ninguna de estas observaciones contradice el diseño existente ni se implementa en esta misión — quedan documentadas como insumo para el roadmap del proyecto (`docs/12-Roadmap.md`).
+
+---
+
+# Relación con Datos de Mercado — actualización MR-004
+
+Análisis posterior (`docs/24-Analisis-Arquitectonico-INC-04-INC-05.md`) identificó que `engine/06-Expected-Value.md` consume `cuotas.csv` directamente, sin pasar por esta capa (`INC-05`). Se formaliza aquí el principio de solución, sin implementarlo todavía: las cuotas **nunca** se modelarán como una Variable Oficial más de `docs/16-Contrato-Oficial-de-Variables.md` (son datos de mercado, no de rendimiento deportivo). En su lugar, esta misma capa deberá, en una implementación futura, prepararlas como una segunda categoría de salida — **Datos de Mercado** — paralela a las Variables Oficiales, con su propio contrato todavía sin diseñar. Hasta que ese contrato exista, `engine/06` continúa leyendo `cuotas.csv` directamente, como excepción documentada.
 
 ---
 
