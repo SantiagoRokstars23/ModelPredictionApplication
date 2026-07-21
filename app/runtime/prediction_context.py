@@ -43,6 +43,28 @@ Only (`docs/30`, sección 2/5) es una responsabilidad de **quién usa** este
 objeto (el futuro Runtime), no del contrato de datos en sí. Añadir esa
 lógica aquí excedería "no implementar lógica del modelo" (restricciones de
 BUILD-004).
+
+## BUILD-010 (sincronización con `GR-009`)
+
+`Engine01Salida` deja de ser un valor único (`fuerza_ofensiva: float`) y
+pasa a contener dos instancias de `Engine01SalidaEquipo` (`local`,
+`visitante`), cada una con los mismos cinco campos ya declarados por
+`engine/01-Offensive-Strength.md` — exactamente lo ya aprobado en
+`docs/30` v2.0.0, sección 4.4.1 (`GR-009`), sin agregar ningún campo nuevo.
+Ningún otro bloque de este módulo se modifica (`Engine02Salida` en
+particular permanece con un único `fuerza_defensiva: float`, fuera del
+alcance de esta misión).
+
+## BUILD-011 (mismo patrón, aplicado ahora a `Engine02Salida`)
+
+`BUILD-011` (implementación de `Engine02`) detectó que su brief asumía que
+`Engine02Salida` ya era bipartita — no lo era; `BUILD-010` la había dejado
+intacta a propósito, fuera de su propio alcance. Ampliación autorizada
+explícitamente por el usuario: se aplica aquí, a `Engine02Salida`, el
+mismo cambio ya validado en `Engine01Salida` (`BUILD-010`) — dos
+instancias de `Engine02SalidaEquipo` (`local`, `visitante`), mismos cinco
+campos ya declarados por `engine/02-Defensive-Strength.md`, sin campos
+nuevos. Ningún otro bloque de este módulo se modifica.
 """
 
 from __future__ import annotations
@@ -166,8 +188,11 @@ class MarcadorProbabilidad(_ContextModel):
     probabilidad: float
 
 
-class Engine01Salida(_ContextModel):
-    """Salida de engine/01-Offensive-Strength.md (docs/30, sección 4.4)."""
+class Engine01SalidaEquipo(_ContextModel):
+    """Los cinco campos de la "Salida" de `engine/01-Offensive-Strength.md`,
+    para un único equipo (`docs/30`, sección 4.4.1 -- `GR-009`). Nunca un
+    valor combinado entre ambos equipos.
+    """
 
     fuerza_ofensiva: float
     nivel_confianza_calculo: float
@@ -176,14 +201,42 @@ class Engine01Salida(_ContextModel):
     calidad_datos: str
 
 
-class Engine02Salida(_ContextModel):
-    """Salida de engine/02-Defensive-Strength.md (docs/30, sección 4.4)."""
+class Engine01Salida(_ContextModel):
+    """Salida de engine/01-Offensive-Strength.md (docs/30, sección 4.4 y
+    4.4.1 -- `GR-009`, `BUILD-010`). Estructura bipartita: una instancia de
+    `Engine01SalidaEquipo` por equipo -- nunca un único valor combinado
+    (versión anterior a `BUILD-010`, ya reconciliada por `GR-009`).
+    """
+
+    local: Engine01SalidaEquipo
+    visitante: Engine01SalidaEquipo
+
+
+class Engine02SalidaEquipo(_ContextModel):
+    """Los cinco campos de la "Salida" de `engine/02-Defensive-Strength.md`,
+    para un único equipo (`docs/30`, sección 4.4.1 -- `GR-009`, aplicada en
+    código por `BUILD-011`, mismo patrón que `Engine01SalidaEquipo`,
+    `BUILD-010`). Nunca un valor combinado entre ambos equipos.
+    """
 
     fuerza_defensiva: float
     nivel_confianza_calculo: float
     variables_utilizadas: list[str] = Field(default_factory=list)
     variables_descartadas: list[str] = Field(default_factory=list)
     calidad_datos: str
+
+
+class Engine02Salida(_ContextModel):
+    """Salida de engine/02-Defensive-Strength.md (docs/30, sección 4.4 y
+    4.4.1 -- `GR-009`, `BUILD-011`). Estructura bipartita: una instancia de
+    `Engine02SalidaEquipo` por equipo -- nunca un único valor combinado
+    (versión anterior a `BUILD-011`, ya reconciliada documentalmente por
+    `GR-009` desde `docs/30` v2.0.0, aplicada en código recién en esta
+    misión -- `BUILD-010` solo alcanzó a `Engine01Salida`, a propósito).
+    """
+
+    local: Engine02SalidaEquipo
+    visitante: Engine02SalidaEquipo
 
 
 class DistribucionGoles(_ContextModel):

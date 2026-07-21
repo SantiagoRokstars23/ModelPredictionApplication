@@ -2,11 +2,17 @@
 
 **Archivo:** `docs/30-Contrato-Oficial-del-Prediction-Context.md`
 
-**Misión:** DEV-003 — Contrato Oficial del Prediction Context
+**Misión:** DEV-003 — Contrato Oficial del Prediction Context (original); **GR-009 — Reconciliación del PredictionContext para Motores Bipartitos** (revisión de `engine01`/`engine02`, sección 9)
 
-**Versión:** 1.0.0
+**Versión:** 2.0.0
 
-**Estado:** Especificación oficial — Contrato de datos de implementación (sin implementación)
+**Estado:** Especificación oficial — Contrato de datos de implementación (sin implementación). Cambio **MAYOR** respecto a la versión 1.0.0 (sección 2, "Versionado": "cambiar la forma de un bloque existente... es MAJOR si elimina o redefine un campo ya consumido") — ver sección 9.
+
+---
+
+# Nota de reconciliación (GR-009) — léase antes de la sección 4.4
+
+Durante `BUILD-009` (implementación de `Engine01`) se detectó que `engine01`/`engine02` (sección 4.4, versión 1.0.0 de este contrato) exponían `Fuerza Ofensiva`/`Fuerza Defensiva` como un único valor, incapaz de representar los dos equipos de un mismo partido — contradicción real entre este contrato y `models/poisson.md`/`models/confidence.md` (que exigen esos valores por equipo). El hallazgo se reportó, no se resolvió, en `BUILD-009`. Esta misión (`GR-009`) lo reconcilia. La sección 4.4 ya refleja la estructura corregida; la sección 9 documenta el análisis completo de los seis motores (no solo `engine01`) que fundamenta esta y las demás decisiones.
 
 ---
 
@@ -148,16 +154,30 @@ Las 12 Variables Oficiales de `docs/16`, cada una con su valor (o marca explíci
 
 ## 4.4 `engine`
 
-Una subsección por motor, con exactamente los campos que cada `engine/0X.md` ya declara en su sección "Salida" — no se inventa ningún campo nuevo:
+Una subsección por motor, con exactamente los campos que cada `engine/0X.md` ya declara en su sección "Salida" — no se inventa ningún campo nuevo, salvo la corrección estructural de `engine01`/`engine02` fijada por `GR-009` (sección 9: los cinco campos ya declarados por `engine/01`/`engine/02` se duplican **por equipo**, no se inventa ningún campo distinto de los ya existentes):
 
-| Subsección | Campos (verbatim de la "Salida" de cada motor) |
+| Subsección | Campos (verbatim de la "Salida" de cada motor, salvo nota) |
 |---|---|
-| `engine01` | Fuerza Ofensiva, Nivel de confianza del cálculo, Variables utilizadas, Variables descartadas, Calidad de los datos |
-| `engine02` | Fuerza Defensiva, Nivel de confianza del cálculo, Variables utilizadas, Variables descartadas, Calidad de los datos |
-| `engine03` | Goles esperados (Local/Visitante), Distribución de goles, Probabilidad de cada marcador, Top de marcadores, Probabilidad de victoria/empate/derrota |
-| `engine04` | Índice de Caos (0-100), Nivel de Caos, Factores que aumentan el caos, Factores que reducen el caos, Justificación |
-| `engine05` | Índice de Confianza (0-100), Nivel de confianza, Factores positivos, Factores negativos, Justificación |
-| `engine06` (condicional) | Valor Esperado, Probabilidad del Modelo, Probabilidad Implícita, Diferencia porcentual, Nivel de confianza, Índice de Caos asociado, Recomendación — uno por mercado evaluado (`engine/06`, "Mercados Compatibles") |
+| `engine01` | **(GR-009)** Fuerza Ofensiva, Nivel de confianza del cálculo, Variables utilizadas, Variables descartadas, Calidad de los datos — **cada uno de los cinco, una vez por equipo** (local y visitante). Ver "4.4.1 Estructura por equipo" |
+| `engine02` | **(GR-009)** Fuerza Defensiva, Nivel de confianza del cálculo, Variables utilizadas, Variables descartadas, Calidad de los datos — **cada uno de los cinco, una vez por equipo**, misma estructura que `engine01`. Ver "4.4.1 Estructura por equipo" |
+| `engine03` | Goles esperados (Local/Visitante), Distribución de goles, Probabilidad de cada marcador, Top de marcadores, Probabilidad de victoria/empate/derrota — **ya bipartito donde corresponde** (goles esperados y distribución, por equipo; probabilidad de resultado, un único trío ya distinguido por naturaleza). Sin cambios (`GR-009`, sección 9.3) |
+| `engine04` | Índice de Caos (0-100), Nivel de Caos, Factores que aumentan el caos, Factores que reducen el caos, Justificación — **un único valor por partido**, no por equipo (el Caos describe la volatilidad del encuentro, no de un equipo individual). Sin cambios (`GR-009`, sección 9.4) |
+| `engine05` | Índice de Confianza (0-100), Nivel de confianza, Factores positivos, Factores negativos, Justificación — **un único valor por partido**, no por equipo (la Confianza evalúa la predicción completa, no a un equipo aislado). Sin cambios (`GR-009`, sección 9.5) |
+| `engine06` (condicional) | Valor Esperado, Probabilidad del Modelo, Probabilidad Implícita, Diferencia porcentual, Nivel de confianza, Índice de Caos asociado, Recomendación — uno por mercado evaluado (`engine/06`, "Mercados Compatibles"). La naturaleza bipartita de mercados como "Ganador del partido" ya queda cubierta por esta estructura de lista (una entrada por selección evaluada, ej. "Victoria Local" y "Victoria Visitante" como dos entradas distintas) — sin cambios (`GR-009`, sección 9.6) |
+
+### 4.4.1 Estructura por equipo de `engine01`/`engine02` (GR-009)
+
+`Engine01Salida` y `Engine02Salida` (mismo shape, aplicado a Fuerza Ofensiva y Fuerza Defensiva respectivamente) contienen dos instancias del mismo grupo de cinco campos — una para `local`, una para `visitante` — nunca un valor combinado ni un promedio:
+
+| Campo (dentro de cada instancia `local`/`visitante`) | Contenido |
+|---|---|
+| `fuerza_ofensiva` (`engine01`) / `fuerza_defensiva` (`engine02`) | El valor numérico 0-100 de ese equipo (`models/offensive-strength.md`/`defensive-strength.md`, §6.4) |
+| `nivel_confianza_calculo` | Confianza del cálculo **para ese equipo específico** — puede diferir de la del rival si, por ejemplo, le faltan más Variables Oficiales contextuales a uno que al otro |
+| `variables_utilizadas` | Variables Oficiales realmente disponibles y usadas **para ese equipo** |
+| `variables_descartadas` | Variables Oficiales no disponibles **para ese equipo** (ausencia real, nunca inventada) |
+| `calidad_datos` | Calificación cualitativa de completitud **para ese equipo** |
+
+Esta es la misma distinción ya explícita, desde la versión 1.0.0 de este contrato, en la sección 4.3 para las Variables Oficiales de rendimiento ("se construyen una vez por equipo") — `GR-009` simplemente aplica, por primera vez, la misma regla a la salida de los motores que consumen esas variables, en vez de colapsarla en un único valor.
 
 Este bloque es la **telemetría completa y verbosa** de cada motor — incluye campos de diagnóstico (variables descartadas, justificación) que no forman parte del contrato de salida al usuario. Es la fuente que consumen `PredictionAssembler` (para construir `prediction`) y, más adelante, `learning/` (para `error-analysis.md`/`pattern-discovery.md`).
 
@@ -234,6 +254,59 @@ Consolidación, sin redefinir ninguna, de las reglas ya vigentes en `docs/15`/`d
 
 ---
 
+# 9. GR-009 — Reconciliación de Motores Bipartitos
+
+*(Sección agregada por `GR-009`. Origen: `BUILD-009` detectó que `Engine01Salida.fuerza_ofensiva` era un único `float`, incapaz de representar los dos equipos de un partido — contradicción real, no introducida por esa misión, entre `docs/30` v1.0.0, `docs/29`, `models/poisson.md` y `models/offensive-strength.md`. Esta sección documenta el análisis completo de los seis motores, no solo `engine01`, conforme al alcance explícito de esta misión: "no asumir que el problema afecta únicamente a Engine01".)*
+
+## 9.1 Pregunta que resuelve esta sección
+
+¿El `PredictionContext` (versión 1.0.0) representa correctamente la naturaleza bipartita de un partido de fútbol (equipo local vs. equipo visitante) en cada una de las seis subsecciones de `engine`? Se analiza cada una por separado — ninguna conclusión se generaliza sin evidencia documental propia.
+
+## 9.2 `engine01`/`engine02` — SÍ requieren estructura por equipo (cambio aplicado)
+
+**Evidencia:**
+
+- `docs/30` §4.3 (sin cambios desde v1.0.0) ya establece que las Variables Oficiales que consumen estos dos motores (Variable001-004, 006-008, `docs/17`) "se construyen una vez por equipo (local y visitante)".
+- `models/offensive-strength.md` §6 y `models/defensive-strength.md` §6 calculan explícitamente `Fuerza Ofensiva`/`Fuerza Defensiva` **a partir de variables de un equipo específico** — la fórmula completa (`P`, `M_forma`, `Pen`) se evalúa una vez por equipo, nunca de forma combinada.
+- `models/poisson.md` §6 exige `FO_local`, `FO_visitante`, `FD_local`, `FD_visitante` como **cuatro valores distintos** para construir `λ_local`/`λ_visitante` — cita textual: "`FO_local`, `FO_visitante` = Fuerza Ofensiva de cada equipo".
+- **Hallazgo adicional que refuerza esta decisión, no limitado a Poisson:** `models/confidence.md` §5-6 define `C_diferencia` como "función creciente de la diferencia absoluta entre Fuerza Ofensiva/Defensiva **de ambos equipos**" — `engine/05-Confidence.md` también necesita ambos valores directamente (no solo a través de `engine03`), lo que confirma que el problema no era exclusivo de la cadena hacia Poisson detectada en `BUILD-009`.
+
+**Decisión:** los cinco campos ya declarados por `engine/01`/`engine/02` (`Fuerza Ofensiva`/`Fuerza Defensiva`, Nivel de confianza del cálculo, Variables utilizadas, Variables descartadas, Calidad de los datos) se duplican **por equipo** — ver sección 4.4.1. Ningún campo nuevo se inventa; se aplica, a la salida de estos dos motores, la misma distinción por equipo que `docs/30` ya exigía para sus variables de entrada.
+
+## 9.3 `engine03` — YA es correcto, sin cambios
+
+**Evidencia:** `docs/30` §4.4 (v1.0.0) ya define `engine03` con `goles_esperados_local`/`goles_esperados_visitante` (dos valores) y `distribucion_goles` con subcampos `local`/`visitante` — bipartito donde `models/poisson.md` §6-8 lo requiere. Los campos `probabilidad_local`/`probabilidad_empate`/`probabilidad_visitante` son, correctamente, un único trío: no son "un valor por equipo" sino tres categorías mutuamente excluyentes del resultado del partido (`models/poisson.md` §8) — duplicarlos "por equipo" no tendría sentido matemático (no existe una "probabilidad visitante del equipo local"). `probabilidad_marcador`/`top_marcadores` describen marcadores conjuntos (ej. "2-1"), inherentemente conjuntos, no de un equipo aislado.
+
+**Decisión:** sin cambios. `engine03` fue, desde `BUILD-004`, el único motor que ya modeló correctamente la bipartición donde correspondía — este hallazgo valida que el diseño original de `docs/30` no tenía un error sistemático, sino una omisión puntual en `engine01`/`engine02`.
+
+## 9.4 `engine04` (Índice de Caos) — NO requiere estructura por equipo
+
+**Evidencia:** `models/chaos-index.md` §2 define explícitamente qué mide el Caos: "qué tan susceptible es un partido concreto de desviarse del escenario esperado" — una propiedad del **encuentro**, no de un equipo individual. Su fórmula (§7) se construye sobre `H` (entropía de la distribución `P_local/P_empate/P_visitante`, ya un resultado conjunto de `engine03`) más ajustes `Δ` que, aunque derivan de Variable001/006/007/012, se combinan en un único índice de volatilidad del partido — el propio `engine/04-Chaos-Index.md` nunca declara "Índice de Caos por equipo" en su sección "Salida".
+
+**Decisión:** sin cambios. Un "Caos del equipo local" no es un concepto que ningún documento del proyecto defina o necesite — el Caos es, por naturaleza, una propiedad del partido como evento único.
+
+## 9.5 `engine05` (Índice de Confianza) — NO requiere estructura por equipo
+
+**Evidencia:** `models/confidence.md` §2 define la Confianza como un juicio de segundo nivel sobre **la predicción en su conjunto** ("¿qué tanto puedo confiar en el número que acabo de calcular?"), no sobre un equipo aislado. Su fórmula (§6) ya combina explícitamente información de ambos equipos dentro de un único resultado — en particular, `C_diferencia` (sección 9.2, arriba) consume `Fuerza Ofensiva`/`Defensiva` de **ambos** equipos (que, tras esta misión, ya llegan correctamente separados por equipo desde `engine01`/`engine02`) para producir **un único** Índice de Confianza sobre el partido completo.
+
+**Decisión:** sin cambios. La Confianza es una propiedad de la predicción, no de un equipo — precisamente por eso necesitaba, como entrada, los valores separados de `engine01`/`engine02` (ya resuelto en la sección 9.2), sin que su propia salida deba dividirse.
+
+## 9.6 `engine06` (Valor Esperado) — NO requiere cambio adicional (ya resuelto por diseño existente)
+
+**Evidencia:** `docs/30` §4.4 (v1.0.0) ya declara `engine06` como una **lista**, "uno por mercado evaluado" — y `engine/06-Expected-Value.md`, sección "Mercados Compatibles", incluye mercados como "Ganador del partido" que, en la práctica, se evalúan por selección (ej. "Victoria Local" y "Victoria Visitante" como dos entradas de la lista, cada una con su propio `mercado`/`probabilidad_modelo`/`valor_esperado`). La naturaleza bipartita (y, para otros mercados, n-partita — "Más/Menos goles", "Hándicap") ya está cubierta por el diseño de lista, sin necesitar una distinción `local`/`visitante` estructural adicional.
+
+**Decisión:** sin cambios.
+
+## 9.7 Nuevos hallazgos detectados durante esta revisión
+
+Ninguna contradicción nueva de la misma naturaleza (bipartición). Se documenta, sin resolver por quedar fuera del alcance de esta misión (que solo puede modificar `docs/30`), un hallazgo ya conocido y no nuevo, que esta revisión confirma pero no origina: la duplicidad de cálculo de Variable001/006/007 entre `engine04` y `engine05` (ya señalada en `models/chaos-index.md` §10 y `models/confidence.md` §4) — no relacionada con la bipartición, y explícitamente fuera del alcance de `GR-009`.
+
+## 9.8 Conclusión de la reconciliación
+
+De los seis motores, únicamente `engine01` y `engine02` tenían un contrato incorrecto respecto a la naturaleza bipartita del fútbol. `engine03` ya lo modelaba correctamente desde `BUILD-004`. `engine04`, `engine05` y `engine06` son, por el propio fundamento matemático de sus modelos de investigación, correctamente unipartitos (`engine04`/`engine05`) o ya generalizados vía lista (`engine06`) — forzar una estructura `local`/`visitante` en cualquiera de los tres habría sido un cambio no justificado por evidencia documental, exactamente lo que esta misión advierte explícitamente no hacer ("no modificar el contrato únicamente para satisfacer BUILD-009").
+
+---
+
 # Validaciones obligatorias
 
 - **¿Todos los motores pueden ejecutarse usando únicamente este Context?** Sí — cada motor de `engine/01` a `engine/06` recibe del `PredictionContext` exactamente lo que su sección "Entradas" ya declara (Variables Oficiales del bloque `variables`, o salidas de motores anteriores del bloque `engine`), con la única excepción ya heredada y documentada de `engine06`/cuotas (bloque `market`).
@@ -276,6 +349,52 @@ Sí, en el nivel de diseño que le corresponde a la serie `DEV-`: con `docs/26` 
 
 ---
 
+# Cierre obligatorio — GR-009
+
+**1. ¿Qué contradicción fue reconciliada?**
+Que `Engine01Salida`/`Engine02Salida` (v1.0.0 de este contrato) exponían `Fuerza Ofensiva`/`Fuerza Defensiva` como un único `float`, incapaz de representar los dos equipos de un mismo partido — contradiciendo `docs/30` §4.3 (sus propias variables de entrada ya son por equipo), `models/poisson.md` §6 (exige `FO_local`/`FO_visitante` distintos) y, hallazgo adicional de esta misión, `models/confidence.md` §6 (`C_diferencia` también necesita ambos valores directamente).
+
+**2. ¿Qué partes del `PredictionContext` cambiaron?**
+Únicamente la sección 4.4 (tabla de `engine`) y la nueva subsección 4.4.1: `engine01` y `engine02` pasan de un valor único a una estructura con dos instancias (`local`/`visitante`) de los mismos cinco campos ya declarados por `engine/01`/`engine/02`. Ningún otro bloque del contrato (`metadata`, `match`, `variables`, `prediction`, `market`, `bankroll`, `errors`, `audit`, `learning`) se modificó.
+
+**3. ¿Qué motores permanecieron sin cambios?**
+`engine03` (ya correcto desde `BUILD-004` — bipartito donde correspondía, unipartito donde correspondía), `engine04` (Índice de Caos, propiedad del partido, no de un equipo), `engine05` (Índice de Confianza, propiedad de la predicción completa) y `engine06` (Valor Esperado, ya generalizado vía lista "uno por mercado"). Ver sección 9.3-9.6 para la justificación de cada uno.
+
+**4. ¿Qué evidencia documental justificó cada modificación?**
+Para `engine01`/`engine02`: `docs/30` §4.3, `models/offensive-strength.md` §6, `models/defensive-strength.md` §6, `models/poisson.md` §6, y `models/confidence.md` §6 (sección 9.2). Para las no-modificaciones: el propio texto de `models/chaos-index.md` §2 (9.4), `models/confidence.md` §2 (9.5), y `docs/30` §4.4 v1.0.0 + `engine/06-Expected-Value.md` "Mercados Compatibles" (9.6).
+
+**5. ¿Se detectaron nuevas contradicciones?**
+No de la misma naturaleza (bipartición). Se confirma, sin resolver por exceder el alcance de esta misión, una duplicidad ya conocida y no originada aquí: el cálculo compartido de Variable001/006/007 entre `engine04` y `engine05` (`models/chaos-index.md` §10, `models/confidence.md` §4) — sección 9.7.
+
+**6. ¿`PredictionContext` queda ahora consistente con los seis motores?**
+Sí, en el sentido de que cada subsección de `engine` ahora representa correctamente, con evidencia documental propia, la naturaleza (bipartita o unipartita) de lo que su motor correspondiente calcula — ninguna subsección quedó sin analizar (sección 9.1).
+
+**7. ¿Qué impacto tendrá este cambio sobre `BUILD-004` y `BUILD-009`?**
+Sobre `BUILD-004`: `app/runtime/prediction_context.py` (`Engine01Salida`/`Engine02Salida`) deberá actualizarse para reflejar la nueva estructura de la sección 4.4.1 — cambio de código pendiente, explícitamente fuera del alcance de `GR-009` ("No modificar código Python"). Sobre `BUILD-009`: `app/engine/engine01.py` ya calcula internamente ambos valores por equipo (`_ResultadoEquipo`, uno por `local`/`visitante`) — una vez actualizado el contrato en código, `Engine01.ejecutar()` podrá publicar `context.engine.engine01` en lugar de lanzar `PublicacionBloqueadaPorEsquema`; el bloqueo documentado en `BUILD-009` queda, con esta misión, resuelto a nivel de especificación, pendiente de aplicarse en código.
+
+**8. ¿Será necesario modificar código Python posteriormente?**
+Sí — `app/runtime/prediction_context.py` (`Engine01Salida`/`Engine02Salida`, para adoptar la estructura de la sección 4.4.1) y, después, `app/engine/engine01.py` (para publicar en lugar de bloquear la ejecución) y el futuro `app/engine/engine02.py`. Ninguno de los dos se modifica en esta misión (fuera de su alcance explícito: "No modificar código Python").
+
+**9. ¿Qué misión recomendarías inmediatamente después?**
+Una misión `BUILD-` que actualice `app/runtime/prediction_context.py` conforme a la sección 4.4.1 de este contrato (ya reconciliado), y ajuste `app/engine/engine01.py` para publicar `context.engine.engine01` en lugar de lanzar `PublicacionBloqueadaPorEsquema` — desbloqueando, de paso, la futura implementación de `engine/02` y `engine/03-Poisson.md`.
+
+**10. ¿Se actualizaron `CHANGELOG.md` y `docs/00-Project-Tracker.md`?**
+Sí, ambos — ver las entradas de esta misión (`GR-009`).
+
+---
+
+# Autocrítica — GR-009
+
+*(Sección exigida por `docs/22-Manual-Operativo-del-Arquitecto-IA.md`, sección 8, para toda misión de la serie `GR-`.)*
+
+- **¿Qué supuestos hice sin poder verificarlos completamente?** Que duplicar los cinco campos completos de `engine01`/`engine02` (no solo el valor numérico) por equipo es la decisión correcta, en lugar de duplicar únicamente `fuerza_ofensiva`/`fuerza_defensiva` y dejar los cuatro campos de diagnóstico como un valor agregado del partido. Se eligió la duplicación completa porque la disponibilidad de datos (`variables_utilizadas`/`descartadas`) puede diferir genuinamente entre equipos, pero ningún documento de `models/`/`engine/` lo confirma explícitamente para esos cuatro campos — es una extrapolación razonada, no un hecho verificado.
+- **¿Qué parte de este entregable podría estar equivocada?** La decisión de no modificar `engine04`/`engine05` podría revisarse si una futura calibración real demuestra que alguno de sus `Δ`/`C_x` debería, en la práctica, calcularse por equipo antes de combinarse (ej. si se descubre que el "Caos por indisponibilidad" de un equipo debiera reportarse por separado) — hoy ningún documento de investigación lo sugiere, pero no es una imposibilidad conceptual descartada para siempre.
+- **¿Qué información me habría hecho falta para tener más certeza?** Un ejemplo real de auditoría o de calibración (`data/results/`, hoy vacío) que mostrara si separar `nivel_confianza_calculo`/`calidad_datos` por equipo en `engine01`/`engine02` aporta valor predictivo real, frente a mantenerlos agregados — hoy la decisión se basa en coherencia estructural, no en evidencia empírica de que la separación mejore el modelo.
+- **¿Qué validaría antes de que esto se tome como definitivo?** Que la futura implementación de código (`BUILD-` recomendada en el Cierre, pregunta 9) efectivamente pueda construir `Engine01Salida`/`Engine02Salida` con esta estructura sin ambigüedad, y que `models/poisson.md`/`confidence.md` no necesiten, en su futura Versión 2.0 calibrada, ningún campo adicional no anticipado aquí.
+- **¿Existe una interpretación razonable distinta a la que elegí?** Sí — ya señalada arriba: mantener los cuatro campos de diagnóstico como un valor agregado (no por equipo) y solo bipartir el valor numérico principal. Se descartó por incoherencia interna (si `variables_descartadas` difiere realmente por equipo, un valor agregado ocultaría información real), pero es una decisión de diseño razonada, no la única posible.
+
+---
+
 # Autocrítica
 
 *(Sección exigida por `docs/22-Manual-Operativo-del-Arquitecto-IA.md`, sección 8.)*
@@ -295,6 +414,16 @@ Sí, en el nivel de diseño que le corresponde a la serie `DEV-`: con `docs/26` 
 - No se elige lenguaje ni tecnología.
 - No se diseña el Contrato de Datos de Mercado completo — el bloque `market` solo reserva su posición (`INC-05` sigue sin resolverse).
 - No se amplían `docs/09-Auditoria.md` ni `docs/07-Backroll.md` — se referencian en el estado de marcador mínimo en que se encuentran hoy (`AR-001`).
+
+---
+
+# Fuera de alcance de GR-009 (adicional a lo anterior)
+
+- No se modifica `app/runtime/prediction_context.py` ni ningún otro archivo de código Python — la sección 9 (Cierre, pregunta 7-8) deja explícitamente pendiente esa actualización para una futura misión `BUILD-`.
+- No se modifica el Runtime, `EngineRunner`, `app/models` (SQLAlchemy) ni ninguna arquitectura Python ya definida en `docs/35`.
+- No se modifican las Variables Oficiales, `docs/17`, ni ninguna fórmula de `models/offensive-strength.md`, `defensive-strength.md`, `poisson.md`, `confidence.md`, `chaos-index.md` ni `expected-value.md` — todas se leyeron como evidencia, ninguna se editó.
+- No se resuelve la duplicidad de cálculo de Variable001/006/007 entre `engine04`/`engine05` (sección 9.7) — documentada, no corregida, por exceder el alcance de esta misión.
+- No se diseña el Contrato de Datos de Mercado (`INC-05`) — sigue igual que en la versión 1.0.0 de este contrato.
 
 ---
 
