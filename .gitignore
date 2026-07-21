@@ -1,0 +1,31 @@
+# Modelo Santiago -- bootstrap oficial (BUILD-001)
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Variables de entorno reales (nunca versionar -- ver .env.example)
+.env
+
+# Pruebas / cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Tipado / lint
+.mypy_cache/
+.ruff_cache/
+
+# Editor / sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

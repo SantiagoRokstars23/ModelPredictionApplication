@@ -1,0 +1,28 @@
+# Modelo Santiago -- orquestacion minima de desarrollo (bootstrap oficial, BUILD-001)
+# Unicamente dos servicios: la aplicacion y PostgreSQL. Ningun servicio adicional.
+# Referencia: docs/33-Modelo-Fisico-PostgreSQL.md (seccion 13: PostgreSQL 16 como piso minimo)
+#             docs/34-Decision-Oficial-del-Stack-Tecnologico.md (seccion 12: Docker)
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-modelo_santiago}
+      POSTGRES_USER: ${POSTGRES_USER:-modelo_santiago}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-modelo_santiago}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

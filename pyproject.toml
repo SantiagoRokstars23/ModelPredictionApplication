@@ -1,0 +1,43 @@
+[project]
+name = "modelo-santiago"
+version = "0.1.0"
+description = "Modelo Santiago -- sistema probabilistico de prediccion de partidos de futbol y evaluacion de mercados de apuestas deportivas."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
+    "pydantic>=2.7",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    # Agregado en BUILD-003: driver de PostgreSQL para SQLAlchemy. Sin el,
+    # `create_engine()` no puede conectar con la base de datos en absoluto --
+    # BUILD-001/BUILD-002 documentaron explicitamente esta brecha como
+    # pendiente ("primera mision que conecte la base de datos"). BUILD-003 es
+    # esa mision. Version recomendada por docs/34-Decision-Oficial-del-Stack-Tecnologico.md,
+    # seccion 11: psycopg 3 (sucesor activamente mantenido de psycopg2).
+    "psycopg[binary]>=3.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+]
+
+# Nota (BUILD-001): [build-system] y [tool.setuptools] no fueron pedidos
+# explicitamente por el brief ("Debe incluir unicamente: nombre, version,
+# descripcion, dependencias principales"), pero se agregan como plomeria
+# minima indispensable -- sin un backend de build declarado, `pip install .`
+# no puede instalar este proyecto en absoluto. No es configuracion de ningun
+# motor del Modelo Santiago (engine/01-06); es infraestructura de empaquetado
+# estandar de Python. Documentado aqui para que la decision sea auditable.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
