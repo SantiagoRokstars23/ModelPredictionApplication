@@ -51,12 +51,23 @@ propio módulo, una clase `VariableObligatoriaNoDisponible` distinta (no
 son intercambiables: una se refiere a Variable003, la otra a Variable004)
 -- este paquete las re-exporta con un alias por motor para evitar que una
 oculte a la otra.
+
+BUILD-012: implementado `Engine03` (engine03.py) -- primer motor
+probabilístico completo (`models/poisson.md`), satisface
+`Engine03Protocol`. Consume `Engine01Salida`/`Engine02Salida` (bipartitas
+desde `BUILD-010`/`BUILD-011`) más Variable009 (Localía) directamente,
+autorizado explícitamente por el usuario tras detectar que el brief
+original lo prohibía, contradiciendo `docs/06`/`docs/17`/`models/poisson.md`.
+Acepta un `MuGolProvider` inyectable (mismo patrón que
+`PreparationRepositoryProtocol` de `app/preparation`); sin implementación
+real todavía -- Engine03 se detiene si no se inyecta uno.
 """
 
 from app.engine.engine01 import Engine01
 from app.engine.engine01 import VariableObligatoriaNoDisponible as Engine01VariableObligatoriaNoDisponible
 from app.engine.engine02 import Engine02
 from app.engine.engine02 import VariableObligatoriaNoDisponible as Engine02VariableObligatoriaNoDisponible
+from app.engine.engine03 import Engine03, EntradaFaltante, MuGolNoDisponible, MuGolProvider
 from app.engine.engine_runner import (
     Engine01Protocol,
     Engine02Protocol,
@@ -75,10 +86,14 @@ __all__ = [
     "Engine02",
     "Engine02Protocol",
     "Engine02VariableObligatoriaNoDisponible",
+    "Engine03",
     "Engine03Protocol",
     "Engine04Protocol",
     "Engine05Protocol",
     "Engine06Protocol",
     "EngineRunner",
+    "EntradaFaltante",
     "MotorProtocol",
+    "MuGolNoDisponible",
+    "MuGolProvider",
 ]
