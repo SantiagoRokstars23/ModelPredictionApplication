@@ -2,11 +2,11 @@
 
 **Archivo:** `models/offensive-strength.md`
 
-**Misión:** MODEL-001 — Modelo Matemático de Fuerza Ofensiva (primera misión con prefijo "MODEL-")
+**Misión:** MODEL-001 — Modelo Matemático de Fuerza Ofensiva (primera misión con prefijo "MODEL-") / MODEL-009 — Especificación Oficial de Variable003 para V1 (operacionaliza la sección 6.1 ya existente: fuente exacta, ventana temporal, pesos placeholder con metodología, casos límite y complejidad computacional)
 
-**Versión:** 2.0.0-investigación
+**Versión:** 2.1.0-investigación
 
-**Estado:** Investigación — estructura de la fórmula definida; coeficientes (pesos) **pendientes de calibración estadística** con datos reales, conforme a `CLAUDE.md` ("Nunca alterar pesos sin evidencia estadística")
+**Estado:** Investigación — estructura de la fórmula definida; coeficientes (pesos) **pendientes de calibración estadística** con datos reales, conforme a `CLAUDE.md` ("Nunca alterar pesos sin evidencia estadística"). Desde `MODEL-009`, la construcción de Variable003 (sección 6.1) tiene además una especificación V1 completamente operacional (secciones 17-25) — implementable en código en cuanto existan datos reales, sin requerir más decisiones de diseño.
 
 ---
 
@@ -263,6 +263,166 @@ Tres, principalmente: (a) sobreponderación de la forma reciente si realmente co
 - No se modifica `engine/01-Offensive-Strength.md`, el Runtime, el Pipeline, las Variables Oficiales, `learning/` ni la Base de Conocimiento.
 - No se fija ningún valor numérico de peso — solo su rol estructural.
 - No se corrige la ausencia de "grandes oportunidades" en el esquema de datos — se documenta como limitación, no se resuelve.
+
+---
+
+# MODEL-009 — Especificación Oficial de Variable003 para V1
+
+*(Secciones agregadas por `MODEL-009`. Origen: `BUILD-017` detectó que `VariablePreparation` no podía producir Variable003 porque, aunque la sección 6.1 ya definía la estructura de la fórmula desde `MODEL-001`, faltaban las decisiones operacionales necesarias para convertirla en código — fuente exacta de cada métrica, ventana temporal, un valor concreto de `s`, y el tratamiento de casos límite. Esta sección cierra ese vacío sin redefinir la fórmula ya aprobada en la sección 6.1 — la opera-cionaliza.)*
+
+## 17. Aclaración de nomenclatura
+
+El brief de `MODEL-009` se refiere a esta variable como "Variable003 (Nivel de Juego)". El nombre oficial, fijado consistentemente desde `docs/03-Variables.md`, `docs/16-Contrato-Oficial-de-Variables.md`, `docs/17-Matriz-de-Consumo-de-Variables.md` y la sección 2 de este mismo documento, es **"Potencial Ofensivo"** — ningún documento del proyecto usa "Nivel de Juego". Se trata como el mismo nombre informal de la misma variable (mismo número, Variable003), no como una variable distinta ni un renombramiento — esta sección lo deja explícito para no introducir una segunda etiqueta en la documentación oficial.
+
+## 18. Por qué no se adopta el ejemplo ilustrativo del brief
+
+El brief ilustra con `NivelJuego = 0.45·Forma + 0.30·Ataque + 0.15·Defensa + 0.10·Rival` — "no necesariamente esta". Verificado antes de continuar: esa estructura, tomada literalmente, incorporaría un componente de **Defensa** (Variable004, asignada exclusivamente a `engine/02` por `docs/17`) y un ajuste de **Rival** (asignado exclusivamente a `engine/03-Poisson.md` por `docs/17` y `models/poisson.md` §6, "Fuerza Base cruzada") dentro de Variable003 — contradiciendo la Matriz de Consumo ya vigente, que esta misión no está autorizada a modificar. No se adopta. La especificación de esta sección permanece dentro del alcance ya fijado por `docs/03`/`docs/17` para Variable003: producción ofensiva pura de un equipo, sin componente defensivo ni ajuste de rival (ese ajuste ya ocurre, correctamente, dentro de `models/poisson.md` §6, sobre la Fuerza Ofensiva ya calculada).
+
+## 19. Definición operacional exacta
+
+**Variable003 (Potencial Ofensivo)** representa la capacidad de una selección para generar y convertir oportunidades de gol, medida como un índice compuesto y estandarizado (0-100) de sus estadísticas de tiro — Expected Goals (`xG`), volumen de disparos y precisión de disparos — durante sus últimos `N` partidos oficiales, expresada en relación con las demás selecciones de la misma competición durante la misma ventana temporal.
+
+No mide goles anotados directamente (esos incluyen varianza de finalización, `models/offensive-strength.md` §2) ni depende de la calidad del rival (ese ajuste pertenece a `engine/03`) ni de la fase del torneo. Es, exclusivamente, una medida relativa de producción ofensiva reciente.
+
+## 20. Fuente de datos
+
+| Métrica | Archivo | Columna | Disponibilidad hoy |
+|---|---|---|---|
+| `xG` | `data/processed/selecciones-nacionales/estadisticas_partido.csv` | `xg` | Columna existe; **0 filas** (verificado antes de escribir, `BUILD-017`) |
+| Disparos totales | `estadisticas_partido.csv` | `disparos_totales` | Igual |
+| Disparos al arco | `estadisticas_partido.csv` | `disparos_al_arco` | Igual |
+| Ventana de partidos (fecha, resultado, competición) | `partidos.csv` | `fecha`, `id_torneo`, `estado_partido` | Columnas existen; **0 filas** |
+| Agrupación por competición | `torneos.csv` → `competiciones.csv` | `id_competicion` | Ya usado en `mu_gol_provider.py` (`BUILD-016`), mismo patrón de `join` |
+
+**Por qué solo estas fuentes, y por qué no ranking FIFA/Elo:** el Contrato Oficial de Variables (`docs/16`) no autoriza ninguna fuente externa para Variable003 — su columna "Fuente" fija exclusivamente "Capa de Preparación de Variables" a partir de la Base de Conocimiento ya modelada (`docs/33`). Incorporar ranking FIFA o un sistema Elo introduciría una variable/fuente nueva no contratada, fuera del alcance de esta misión (`CLAUDE.md`: "Ningún motor podrá incorporar nuevas fórmulas, variables o algoritmos sin una investigación previa documentada"; esta misión investiga Variable003 tal como ya está contratada, no propone una fuente alternativa).
+
+**"Grandes oportunidades" y "Conversión"** (las otras dos métricas que `docs/03` lista para Variable003): se mantienen fuera del cálculo V1, exactamente como ya lo dejó `MODEL-001` §13 — "Grandes oportunidades" no existe como campo en ningún archivo del esquema (no derivable sin ampliar `docs/33`, fuera de alcance); "Conversión" sería técnicamente derivable (goles del equipo, `partidos.csv`, dividido por `disparos_totales`), pero se deja fuera de la fórmula oficial V1 por prudencia metodológica: incorporar una métrica derivada nueva a la construcción de `Z` es una decisión de diseño que esta misión prefiere no tomar unilateralmente sin evidencia de que mejora el índice — queda documentada como candidata explícita de V1.1 (sección 25).
+
+## 21. Fórmula oficial V1 (operacionalización de la sección 6.1)
+
+Restringida a las tres métricas con fuente real hoy (sección 20) — la estructura general de la sección 6.1 no cambia, solo se fija `i ∈ {xG, disparos totales, disparos al arco}` en lugar de las cinco originales:
+
+```
+Para cada métrica i ∈ {xG, disparos_totales, disparos_al_arco}:
+
+    x̄_i(equipo)      = promedio de la métrica i del equipo sobre sus últimos N partidos oficiales (sección 22)
+    μ_i(competición) = promedio de la métrica i de TODOS los equipos de la misma competición, sobre la misma ventana temporal
+    σ_i(competición) = desviación estándar de la métrica i, misma población que μ_i
+
+    z_i = (x̄_i(equipo) − μ_i(competición)) / σ_i(competición)
+
+Z = Σ vᵢ · zᵢ                      (i = 1..3)
+
+P = 100 · Φ(Z / s)                  (Φ = CDF normal estándar; P acotado a [0, 100] por construcción de Φ)
+```
+
+**Pesos — placeholder documentado, no calibrado (`CLAUDE.md`: "nunca inventar pesos sin justificar"):**
+
+- `v₁ = v₂ = v₃ = 1/3`: ponderación **igualitaria**, no arbitraria — mismo criterio ya usado en todo el proyecto (`Engine01`/`Engine02`/`Engine04`/`Engine05`, `BUILD-009` a `BUILD-017`) cuando "ninguna evidencia favorece un término sobre otro". No hay, hoy, ningún estudio o dato que indique que `xG` deba pesar más o menos que el volumen o la precisión de disparos.
+- `s = √(Σ vᵢ²) = √(3 · (1/3)²) = √(1/3) ≈ 0.577`: **no es un número elegido a mano** — es la desviación estándar teórica de `Z` bajo el supuesto de que cada `zᵢ` es aproximadamente `N(0,1)` e independiente entre sí (mismo supuesto de independencia ya documentado como limitación en la sección 11, supuesto 4). Se deriva matemáticamente de los propios pesos `vᵢ`, no se propone como un valor adicional sin origen. Fijar `s = 1` sin este ajuste comprimiría artificialmente `Z/s` hacia el centro de `Φ` (dado que `Var(Z) ≈ 1/3 < 1`), sin ninguna justificación para esa compresión.
+
+**Metodología de calibración real (futura, no de esta misión):** los tres símbolos (`v₁`, `v₂`, `v₃`) deben re-estimarse mediante uno de los métodos ya catalogados en `models/parameter-calibration.md` §7 — Maximum Likelihood Estimation es el candidato natural (mismo método ya recomendado ahí para parámetros de ataque/defensa, citando Maher 1982/Dixon-Coles 1997), una vez exista suficiente historial en `data/results/`. `s` debería, en ese momento, recalcularse empíricamente a partir de la varianza real observada de `Z` en los datos, no derivarse teóricamente como aquí.
+
+## 22. Variables internas y ventana temporal
+
+**Métricas necesarias** (por equipo, por partido, agregadas sobre la ventana): `xg`, `disparos_totales`, `disparos_al_arco` — exactamente las tres columnas de la sección 20, sin ninguna métrica adicional no listada en `docs/03`.
+
+**Ventana temporal — `N = 10` últimos partidos oficiales.** Placeholder estructural, no calibrado (mismo estatus que los pesos, sección 21): la sección 6.1 original dejaba `N` explícitamente sin fijar ("N a determinar en calibración"). Esta misión propone `N = 10` como valor operacional necesario para que `VariablePreparation` pueda ejecutar una consulta concreta — no una media móvil ni una ponderación exponencial (ambas explícitamente fuera de alcance del brief de esta misión), sino una ventana simple de los `N` partidos oficiales más recientes, sin ponderar por antigüedad dentro de la ventana. Se elige `10` por ser un múltiplo común en métricas de "forma" de análisis de fútbol (ampliamente usado por proveedores de datos públicos, sin una única fuente académica atribuible) — no una calibración estadística contra `data/results/`, que sigue sin existir. **TODO explícito:** recalibrar `N` (`models/parameter-calibration.md` §7) en cuanto exista evidencia suficiente.
+
+`μ_i(competición)`/`σ_i(competición)` se calculan sobre la **misma ventana temporal**, no sobre todo el historial de la competición — mismos partidos recientes de todos los equipos de esa competición, para que la comparación sea contemporánea y no mezcle eras competitivas distintas.
+
+## 23. Normalización
+
+Rango de salida: **0 a 100**, heredado sin cambios de la sección 8 de este mismo documento (ya vigente, `docs/16`: Variable003 es "Índice (0-100)"). `Φ` (CDF normal estándar) satura naturalmente el resultado dentro de `[0,1]`, escalado a `[0,100]` por el factor `100·`. No requiere una segunda normalización ni un `clip` adicional — la propia función `Φ` ya lo garantiza matemáticamente, a diferencia de las etapas de `M_forma`/`Pen` en la sección 6 (que sí usan `clip`, por ser combinaciones lineales sin cota natural).
+
+## 24. Casos límite
+
+| Caso | Comportamiento |
+|---|---|
+| **Equipo con menos de `N` partidos oficiales disponibles** | Se usa el subconjunto disponible (nunca se completa artificialmente hasta `N`); `muestra_reducida = True` se propaga en `ValorVariable` (`docs/30` §4.3) para que `Engine05` lo refleje en su Índice de Confianza — mismo mecanismo ya usado para Variable006/007/010 |
+| **Equipo con cero partidos oficiales con estadísticas válidas en la ventana** | Variable003 se marca `disponible = False` — nunca un valor inventado. Como es obligatoria (Nivel A, `docs/17`), el pipeline se detiene antes de `engine/01` (`docs/06`, tabla "Manejo de errores"; ya el comportamiento exacto que `Engine01`/`VariableObligatoriaNoDisponible` implementan desde `BUILD-009`) |
+| **Selección nueva / debut en la Base de Conocimiento** | Mismo caso que la fila anterior — cero partidos históricos equivale a "sin evidencia", no a un caso especial con lógica propia. No se introduce ningún mecanismo de "período de gracia" no solicitado por ningún documento |
+| **Cambio completo de plantilla** | Sin mecanismo especial — la ventana de `N` partidos ya es "reciente" por construcción; en cuanto la nueva plantilla acumule partidos dentro de la ventana, el índice los refleja automáticamente. No se requiere detectar el cambio explícitamente (evita inventar una señal no solicitada) |
+| **Competición con muy pocos partidos registrados en la ventana** (`σ_i(competición)` indefinida o igual a 0) | Esa métrica `i` se excluye del cálculo de `Z` para todos los equipos de esa competición en ese momento (mismo tratamiento que una variable opcional ausente, sección 6.2: "sin ajuste, nunca un valor inventado"); si las tres métricas quedan excluidas, Variable003 se marca `disponible = False` — nunca se divide por cero ni se sustituye `σ` por un valor arbitrario |
+
+## 25. Complejidad computacional
+
+**Puede precalcularse.** No requiere recalcular sobre todo el historial en cada predicción: `x̄_i(equipo)` es una agregación sobre, como máximo, `N = 10` partidos por equipo (`O(N)`); `μ_i(competición)`/`σ_i(competición)` son una agregación sobre los partidos de la competición dentro de la misma ventana (`O(M)`, `M` = partidos de esa competición en la ventana — en la práctica, decenas, no miles, dado el volumen típico de partidos de selecciones nacionales por competición y por año). Ambas operaciones son lineales y triviales para el volumen de datos de `data/processed/selecciones-nacionales/`.
+
+**Costo esperado:** una consulta por equipo (últimos `N` partidos) más una consulta por competición (partidos de la ventana) — ambas ya resolubles con los mismos patrones de lectura de CSV ya usados en `CsvPreparationRepository`/`HistoricalMuGolProvider` (`BUILD-016`/`BUILD-017`), sin necesitar una base de datos poblada. Recalcular en cada predicción (sin caché) es aceptable en V1 dado el volumen actual; cachear el agregado por selección/competición y actualizarlo incrementalmente tras cada partido nuevo (`docs/03`, Variable001: "Frecuencia de actualización: Después de cada partido" — mismo principio aplicable aquí) es una optimización futura, no bloqueante.
+
+## 26. Dependencias
+
+| Documento | Impacto de esta especificación |
+|---|---|
+| `docs/03-Variables.md` | Variable003 podría pasar de "Método de cálculo: Pendiente" a "Método: definido, ver `models/offensive-strength.md` §6.1/§17-26" — actualización editorial que pertenece a `docs/`, fuera de alcance de esta misión de `models/` (`CLAUDE.md`: "la investigación pertenece a `models/`... la implementación pertenece al engine"; una actualización de `docs/03` requeriría su propia misión) |
+| `docs/17-Matriz-de-Consumo-de-Variables.md` | Sin cambios — ya asigna Variable003 exclusivamente a `engine/01`, consistente con esta especificación (sección 18 confirma que no se amplía ese consumo) |
+| `docs/30-Contrato-Oficial-del-Prediction-Context.md` | Sin cambios — el campo `potencial_ofensivo` de `VariablesBlock` ya está tipado `float \| None` (`ValorVariable.valor`), compatible con este resultado numérico 0-100 sin ningún bloqueo de esquema (a diferencia de Variable009/Localía, `BUILD-017`) |
+| `app/preparation/preparation.py` (`VariablePreparation`, `BUILD-017`) | Consumidor directo de esta especificación en una futura misión `BUILD-` — hoy declara Variable003 `disponible=False` explícitamente por ausencia de método autorizado; esta misión provee ese método |
+| `models/parameter-calibration.md` | Ya cataloga `vᵢ`/`s` como parámetros de `Offensive Strength` (sección 4 de ese documento) — sin cambios, esta misión no altera su catálogo, solo fija el valor placeholder de `s` como derivado matemáticamente de los pesos (sección 21), no como una calibración real |
+
+## 27. Impacto
+
+Una vez que esta especificación sea revisada y aprobada por el Arquitecto Estadístico Humano (Constitución, Art. 2.9 y Art. 5 — nunca autoaprobada por el Arquitecto Estadístico IA):
+
+- **`VariablePreparation` podría implementar el cálculo real de Variable003** en una futura misión `BUILD-`, siguiendo exactamente la fórmula de la sección 21 y los casos límite de la sección 24 — sin ninguna decisión de diseño pendiente.
+- **`Engine01` dejaría de detenerse por `VariableObligatoriaNoDisponible`** únicamente cuando, además, existan filas reales en `estadisticas_partido.csv` y `partidos.csv` (hoy ambos con cero filas, verificado en `BUILD-017`) — esta misión resuelve el bloqueo **metodológico** (qué fórmula usar), no el bloqueo de **datos** (que sigue pendiente, `docs/27-Auditoria-de-Variables-Pendientes.md`). Es importante no sobrestimar el impacto: sin datos reales, el resultado práctico inmediato seguiría siendo `disponible=False`, igual que hoy, pero por la razón correcta ("sin evidencia suficiente") en vez de "sin método".
+- **`Engine03` podría producir `λ_local`/`λ_visitante` reales** en la misma condición (Variable003 disponible con dato real) — es la última pieza obligatoria de Capa 1 que le faltaba a Fuerza Ofensiva.
+
+---
+
+# Validaciones — MODEL-009
+
+- **¿La especificación V1 contradice la fórmula ya aprobada en la sección 6.1?** No — la restringe a 3 de 5 métricas (ya contemplado como ejecutable por la propia sección 6.1/§13) y fija las decisiones operacionales que esa sección dejaba abiertas deliberadamente (`N`, valor placeholder de `s`), sin cambiar la estructura `Z`/`Φ`/`P`.
+- **¿Se fija algún peso sin justificar?** No — `vᵢ` usa ponderación igualitaria (mismo criterio neutral ya aplicado en todo el proyecto) y `s` se deriva matemáticamente de esos mismos pesos bajo un supuesto ya documentado (independencia aproximada, sección 11) — ninguno es un número elegido arbitrariamente.
+- **¿Se usa alguna fuente no autorizada (ranking FIFA, Elo)?** No — sección 20 confirma exclusivamente `data/processed/selecciones-nacionales/estadisticas_partido.csv`/`partidos.csv`/`torneos.csv`/`competiciones.csv`, ya parte de la Base de Conocimiento contratada.
+- **¿Se adoptó el ejemplo ilustrativo del brief tal cual?** No — sección 18 documenta por qué contradice `docs/17` y se descarta explícitamente.
+- **¿Es reproducible?** Sí — una vez fijados `N`, `vᵢ` y `s` (aunque sean placeholders), la fórmula es una función determinista de los datos de entrada.
+
+---
+
+# Cierre obligatorio — MODEL-009
+
+**1. Definición exacta.**
+Variable003 (Potencial Ofensivo) mide la capacidad de una selección para generar y convertir oportunidades de gol, como índice compuesto estandarizado (0-100) de `xG`/disparos totales/disparos al arco de sus últimos `N=10` partidos oficiales, relativo a las demás selecciones de la misma competición en la misma ventana — sección 19.
+
+**2. Fuente de datos.**
+`estadisticas_partido.csv` (`xg`, `disparos_totales`, `disparos_al_arco`) y `partidos.csv`/`torneos.csv`/`competiciones.csv` (ventana temporal y agrupación por competición) — sección 20. Sin ranking FIFA, Elo ni ninguna fuente externa no contratada.
+
+**3. Fórmula oficial.**
+`Z = (1/3)·z_xG + (1/3)·z_disparos + (1/3)·z_disparos_arco`; `P = 100·Φ(Z/√(1/3))` — sección 21. Pesos iguales (neutral, no arbitrario); `s` derivado matemáticamente de los pesos, no calibrado.
+
+**4. Variables internas.**
+`xg`, `disparos_totales`, `disparos_al_arco` — sección 22. "Grandes oportunidades" sin fuente (fuera de alcance); "Conversión" derivable pero diferida a V1.1 (sección 20).
+
+**5. Ventana temporal.**
+`N = 10` últimos partidos oficiales, sin ponderación exponencial ni media móvil — placeholder estructural, TODO calibración (sección 22).
+
+**6. Normalización.**
+0-100, garantizado por construcción de `Φ` — sin `clip` adicional necesario (sección 23).
+
+**7. Casos límite.**
+Menos de `N` partidos → `muestra_reducida=True`; cero partidos (equipo nuevo o debut) → `disponible=False`, pipeline se detiene (obligatoria, Nivel A); competición con `σ=0`/indefinida → esa métrica se excluye, o toda la variable si las tres quedan excluidas — sección 24.
+
+**8. Complejidad computacional.**
+Precalculable, `O(N)` por equipo + `O(M)` por competición, ambos lineales y triviales al volumen actual de datos — sección 25.
+
+**9. Dependencias.**
+`docs/03` (actualización editorial futura, fuera de esta misión), `docs/17` (sin cambios, ya consistente), `docs/30` (sin cambios, sin bloqueo de esquema), `app/preparation/preparation.py` (consumidor futuro), `models/parameter-calibration.md` (sin cambios al catálogo) — sección 26.
+
+**10. Impacto.**
+Desbloquea el camino **metodológico** de `VariablePreparation`/`Engine01`/`Engine03` para Variable003 — no desbloquea, por sí solo, una predicción real, porque `estadisticas_partido.csv`/`partidos.csv` siguen sin filas reales (`BUILD-017`). Requiere, además, aprobación explícita del Arquitecto Estadístico Humano antes de implementarse en código (Constitución, Art. 2.9/Art. 5) — sección 27.
+
+---
+
+# Fuera de alcance de MODEL-009
+
+- No se implementa código Python ni pseudocódigo ejecutable.
+- No se modifica el Runtime, `PredictionContext` ni `Engine01` (código) — ver sección 26 para lo que sí queda afectado a nivel documental.
+- No se calibra ningún peso con evidencia real — `vᵢ`/`s`/`N` son placeholders estructurales, documentados como tales, nunca presentados como calibrados.
+- No se corrige la ausencia de "grandes oportunidades" en el esquema ni se incorpora "Conversión" a la fórmula V1 — ambas quedan explícitamente diferidas.
+- No se actualiza `docs/03-Variables.md` (columna "Método de cálculo") — pertenece a una misión de `docs/`, no de `models/`.
+- No se aprueba esta especificación como definitiva — queda pendiente de revisión por el Arquitecto Estadístico Humano, conforme a la Constitución.
 
 ---
 

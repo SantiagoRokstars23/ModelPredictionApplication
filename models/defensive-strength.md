@@ -2,11 +2,11 @@
 
 **Archivo:** `models/defensive-strength.md`
 
-**Misión:** MODEL-002 — Modelo Matemático de Defensive Strength
+**Misión:** MODEL-002 — Modelo Matemático de Defensive Strength / MODEL-010 — Especificación Oficial de Variable004 para V1 (operacionaliza la sección 6.2 ya existente: fuente exacta, ventana temporal, pesos placeholder con metodología, corrección de consistencia interna de signo, casos límite y complejidad computacional — mismo patrón que `MODEL-009` sobre `models/offensive-strength.md`)
 
-**Versión:** 2.0.0-investigación
+**Versión:** 2.1.0-investigación
 
-**Estado:** Investigación — estructura de la fórmula definida; coeficientes (pesos) **pendientes de calibración estadística**, conforme a `CLAUDE.md` ("Nunca alterar pesos sin evidencia estadística")
+**Estado:** Investigación — estructura de la fórmula definida; coeficientes (pesos) **pendientes de calibración estadística**, conforme a `CLAUDE.md` ("Nunca alterar pesos sin evidencia estadística"). Desde `MODEL-010`, la construcción de Variable004 (sección 6.2) tiene además una especificación V1 completamente operacional (secciones 13-21) — implementable en código en cuanto existan datos reales, sin requerir más decisiones de diseño.
 
 ---
 
@@ -205,6 +205,156 @@ Dos: (a) el signo se invierte en la construcción del término base (`1 − Φ(.
 - No se fija ningún valor numérico de peso.
 - No se cataloga formalmente en `docs/28` ninguna variable derivada nueva — solo se documenta su dependencia.
 - No se corrige la discrepancia de "Grandes Oportunidades Concedidas" en `engine/02` — se documenta, no se resuelve.
+
+---
+
+# MODEL-010 — Especificación Oficial de Variable004 para V1
+
+*(Secciones agregadas por `MODEL-010`, mismo patrón editorial que `MODEL-009` sobre `models/offensive-strength.md` — extiende este documento en lugar de crear uno nuevo, conforme al brief. Origen: `BUILD-018` implementó Variable003 siguiendo `MODEL-009`; esta misión hace lo mismo para Variable004, condición previa de una futura `BUILD-019`.)*
+
+## 13. Definición operacional exacta
+
+**Variable004 (Solidez Defensiva)** representa la capacidad de una selección para impedir que sus rivales generen y conviertan oportunidades de gol, medida como un índice compuesto y estandarizado (0-100) de cuatro métricas de producción ofensiva **concedida** — Expected Goals en contra (`xGA`), goles recibidos, remates permitidos y frecuencia de porterías en cero — durante sus últimos `N` partidos oficiales, expresada en relación con las demás selecciones de la misma competición durante la misma ventana temporal.
+
+Mismo patrón definicional que Variable003 (`models/offensive-strength.md` §19, `MODEL-009`), con los términos invertidos: donde Variable003 mide producción propia, Variable004 mide producción **rival concedida**. No mide goles recibidos en sí mismos (varianza de finalización rival y del portero, sección 2) ni depende de la calidad del rival de un partido concreto (ese ajuste pertenece a `engine/03`, sección 2).
+
+## 14. Fuente de datos
+
+| Métrica | Archivo | Columna / cálculo | Disponibilidad hoy |
+|---|---|---|---|
+| `xGA` | `data/processed/selecciones-nacionales/estadisticas_partido.csv` | *Self-join* sobre `id_partido`: el `xg` de la fila del **rival** en ese mismo partido (§8, ya confirmado "Derivable") | Columna existe; **0 filas** (verificado antes de escribir, mismo estado que `BUILD-017`/`BUILD-018`) |
+| Goles recibidos | `data/processed/selecciones-nacionales/partidos.csv` | Goles del rival en el mismo partido (`goles_visitante` si el equipo fue local, `goles_local` si fue visitante) — §8 | Columnas existen; **0 filas** |
+| Remates permitidos | `estadisticas_partido.csv` | *Self-join* sobre `id_partido`: `disparos_totales` de la fila del rival (§8, "Derivable") — **no** `disparos_al_arco`, tal como ya lo fija §8 explícitamente | Igual |
+| Porterías en cero | Derivado de "Goles recibidos" | Booleano por partido: `1` si goles recibidos `= 0`, `0` en caso contrario (§8, "Cálculo booleano") | Igual |
+| Ventana de partidos / competición | `partidos.csv` → `torneos.csv` → `competiciones.csv` | Idéntico a Variable003 (`MODEL-009` §20) | Igual |
+
+**A diferencia de Variable003, las 4 métricas están confirmadas como derivables hoy, sin ningún componente bloqueado** (§8, "Hallazgo positivo" — ya lo señalaba el documento original antes de esta misión). No se usa ranking FIFA, Elo ni ninguna fuente externa, por la misma razón ya fijada en `MODEL-009` §20 (`docs/16` no autoriza otra fuente para Variable004).
+
+## 15. Fórmula oficial V1 (operacionalización de la sección 6.2)
+
+```
+Para cada métrica i ∈ {xGA, goles_recibidos, remates_permitidos, tasa_sin_porteria_en_cero}:
+
+    x̄_i(equipo)      = promedio de la métrica i del equipo sobre sus últimos N partidos oficiales (sección 16)
+    μ_i(competición) = promedio de la métrica i de TODOS los equipos de la misma competición, sobre la misma ventana temporal
+    σ_i(competición) = desviación estándar de la métrica i, misma población que μ_i
+
+    z_i = (x̄_i(equipo) − μ_i(competición)) / σ_i(competición)
+
+Z_def = Σ vᵢ' · zᵢ                        (i = 1..4)
+
+P_def = 100 · (1 − Φ(Z_def / s_def))       (Φ = CDF normal estándar; P_def acotado a [0, 100] por construcción)
+```
+
+**Corrección de consistencia interna — no una hipótesis nueva (ver "Gobernanza" en el brief de `MODEL-010`).** La sección 6.2 original ya fija el invariante: "un `Z_def` ALTO representa peor desempeño defensivo". `xGA`, `goles_recibidos` y `remates_permitidos` ya cumplen esa dirección por sí solos (más goles/xG/remates concedidos = peor defensa = `z_i` más alto). **"Porterías en cero" no la cumple**: más porterías en cero es **mejor** defensa, no peor — si se usara tal cual, su `z_i` apuntaría en sentido contrario a los otros tres dentro de la misma suma `Z_def`, contradiciendo el invariante que el propio documento ya declaraba antes de esta misión. Esto no es una decisión de diseño nueva: es una corrección exigida por dos hechos ya fijados en el texto (el invariante de `Z_def`, sección 6.2; y el significado de "portería en cero" como resultado defensivo positivo, `docs/03-Variables.md`, Variable004). La cuarta métrica se redefine, por tanto, como **`tasa_sin_porteria_en_cero`** = proporción de partidos de la ventana en los que el equipo **concedió al menos un gol** (`1 − tasa de porterías en cero`) — matemáticamente equivalente a invertir el signo de `z_i` de "porterías en cero", expresado como una métrica que ya apunta en la misma dirección que las otras tres, sin introducir ningún peso ni transformación adicional.
+
+**Pesos — placeholder documentado, no calibrado, mismo criterio que `MODEL-009`:**
+
+- `v₁' = v₂' = v₃' = v₄' = 1/4`: ponderación **igualitaria** entre las 4 métricas — mismo criterio neutral que `vᵢ` en Variable003 (`MODEL-009` §21), símbolos propios (`vᵢ'`) ya distinguidos desde la sección 6.1 de este documento. Ninguna evidencia hoy indica que `xGA` deba pesar más o menos que goles recibidos, remates permitidos o la tasa sin portería en cero.
+- `s_def = √(Σ vᵢ'²) = √(4 · (1/4)²) = √(1/4) = 0.5`: misma metodología de derivación que `s` en Variable003 (`MODEL-009` §21: desviación estándar teórica de `Z_def` bajo independencia aproximada) — **el valor numérico difiere del `s` de Variable003 (√(1/3) ≈ 0.577) porque el número de métricas difiere (4, no 3)**, no porque se use un criterio distinto. Diverge de Variable003 en el número, converge en el método.
+
+**Metodología de calibración real (futura, no de esta misión):** igual que `MODEL-009` §21 — `vᵢ'` mediante MLE u otro método de `models/parameter-calibration.md` §7, `s_def` recalculado empíricamente, una vez exista historial suficiente en `data/results/`.
+
+## 16. Variables internas y ventana temporal
+
+**Métricas necesarias** (por equipo, por partido, agregadas sobre la ventana): `xGA`, `goles_recibidos`, `remates_permitidos`, `tasa_sin_porteria_en_cero` — exactamente las cuatro de la sección 14/15, sin ninguna métrica adicional no listada en `docs/03`/§5 de este documento.
+
+**Ventana temporal — `N = 10` últimos partidos oficiales, reutilizado explícitamente de Variable003.** La sección 6.2 de este documento ya autoriza esta reutilización literalmente: "sobre la misma ventana de *N* partidos" (refiriéndose a la construcción de `P` en `MODEL-001`) — a diferencia de los pesos `vᵢ'` (símbolos propios, sección 6.1), el documento nunca distingue un `N` propio de Variable004. Reutilizar `N = 10` (`MODEL-009` §22) es, por tanto, un espejo explícito, no una decisión independiente de esta misión.
+
+**Tratamiento de amistosos y de competiciones — mismo criterio que `MODEL-009` §20, sin excepción.** "Amistosos Internacionales" (`COMP-000001`, `competiciones.csv`) se trata como cualquier otra competición: la resolución `nombre → id_competición → conjunto de id_torneo` no distingue tipo de competición. Ningún documento (`docs/03`, `docs/16`, este archivo) pide un tratamiento diferenciado para amistosos, y esta misión no introduce uno.
+
+`μ_i(competición)`/`σ_i(competición)` se calculan sobre la misma ventana temporal que `MODEL-009` §22 fija para Variable003 (rango de fechas de los propios `N` partidos del equipo) — mismo mecanismo, aplicado aquí a la población de las 4 métricas defensivas.
+
+## 17. Normalización
+
+Rango de salida: **0 a 100**, heredado sin cambios de `docs/16` (Variable004 es "Índice (0-100)", igual convención que Variable003). `Φ` satura naturalmente `[0,1]`, escalado por `100·`; la inversión `1 − Φ(...)` no altera el rango, solo el sentido (`P_def` alto = buena defensa, igual que `P` alto = buen ataque, sección 6.2). No requiere `clip` adicional — misma justificación que `MODEL-009` §23.
+
+## 18. Tratamiento de datos faltantes / casos límite
+
+| Caso | Comportamiento |
+|---|---|
+| **Equipo con menos de `N` partidos oficiales disponibles** | Se usa el subconjunto disponible; `muestra_reducida = True` se propaga en `ValorVariable` — mismo mecanismo que Variable003 (`MODEL-009` §24) |
+| **Equipo con cero partidos oficiales con estadísticas válidas en la ventana** | Variable004 se marca `disponible = False` — nunca un valor inventado. Es obligatoria (Nivel A, `docs/17`); el pipeline se detiene antes de `engine/02` (`docs/06`, tabla "Manejo de errores"), mismo comportamiento que `VariableObligatoriaNoDisponible` en `Engine02` desde `BUILD-011` |
+| **Selección nueva / debut** | Mismo caso que la fila anterior — sin mecanismo especial, mismo criterio que `MODEL-009` §24 |
+| **Estadísticas incompletas** (una fila de `estadisticas_partido.csv` con `xg`/`disparos_totales` no numérico o negativo) | Esa fila se descarta individualmente (mismo tratamiento que una fila corrupta en la implementación de Variable003, `BUILD-018`) — no invalida el resto de la ventana |
+| **`σ_i(competición) = 0` o indefinida** (menos de 2 observaciones en la población) | Esa métrica se excluye del cálculo de `Z_def`, sin renormalizar los pesos restantes — idéntico a `MODEL-009` §24. Si las 4 quedan excluidas, Variable004 se marca `disponible = False` |
+| **Competición sin suficientes registros** (población total insuficiente para cualquier métrica) | Mismo caso que la fila anterior — se excluye la métrica afectada, o toda la variable si las 4 lo están |
+
+## 19. Complejidad computacional
+
+**Puede precalcularse**, igual que Variable003 (`MODEL-009` §25). El *self-join* adicional que exigen `xGA` y `remates_permitidos` (resolver el rival de cada partido vía `partidos.csv` antes de leer su fila en `estadisticas_partido.csv`) es una operación `O(1)` por partido ya indexado por `id_partido` — no cambia el orden de complejidad general: `O(N)` por equipo, `O(M)` por competición (`M` = partidos de la competición en la ventana), ambos lineales. Mismo patrón de lectura de CSV ya usado en `CsvPotencialOfensivoRepository` (`BUILD-018`), extendido con la resolución de rival por partido.
+
+## 20. Dependencias
+
+| Documento | Impacto de esta especificación |
+|---|---|
+| `docs/03-Variables.md` | Variable004 podría pasar de "Método: Pendiente" a "definido, ver `models/defensive-strength.md` §6.2/§13-21" — actualización editorial futura de `docs/`, fuera de alcance de `models/` (mismo criterio que `MODEL-009` §26) |
+| `docs/17-Matriz-de-Consumo-de-Variables.md` | Sin cambios — ya asigna Variable004 exclusivamente a `engine/02`, consistente |
+| `docs/30-Contrato-Oficial-del-Prediction-Context.md` | Sin cambios — `solidez_defensiva` en `VariablesBlock` ya está tipado `float \| None`, compatible sin bloqueo de esquema (mismo caso que Variable003, a diferencia de Variable009) |
+| `app/preparation/preparation.py` (`VariablePreparation`) | Consumidor directo en una futura `BUILD-019`, siguiendo exactamente el mismo patrón ya validado por `BUILD-018` para Variable003 |
+| `models/offensive-strength.md` | Sin cambios — Variable004 reutiliza `N` de esa especificación (sección 16), pero no sus pesos ni su `s` (símbolos propios, sección 15) |
+| `models/parameter-calibration.md` | Ya cataloga `vᵢ'` como parámetros de `Defensive Strength` (sección 4 de ese documento) — sin cambios, esta misión solo fija el valor placeholder de `s_def` como derivado matemáticamente, no calibrado |
+
+## 21. Impacto
+
+Una vez que esta especificación sea revisada y aprobada por el Arquitecto Estadístico Humano (Constitución, Art. 2.9/Art. 5 — nunca autoaprobada por el Arquitecto Estadístico IA):
+
+- **`VariablePreparation` podría implementar el cálculo real de Variable004** en una futura `BUILD-019`, siguiendo exactamente la fórmula de la sección 15 y los casos límite de la sección 18 — mismo patrón que `BUILD-018` aplicó para Variable003, sin ninguna decisión de diseño pendiente.
+- **`Engine02` dejaría de detenerse por `VariableObligatoriaNoDisponible`** únicamente cuando, además, existan filas reales en `estadisticas_partido.csv` y `partidos.csv` (hoy ambos con cero filas) — esta misión resuelve el bloqueo **metodológico**, no el de **datos**. Mismo matiz honesto que `MODEL-009` §27: el resultado práctico inmediato de `BUILD-019` seguiría siendo `disponible=False` hasta que existan datos reales.
+- **`Engine03` podría producir `λ_local`/`λ_visitante` reales** en la misma condición — Variable004 es, junto con Variable003, la última pieza obligatoria de Capa 1 que le faltaba a la Fuerza Defensiva.
+- **`Engine05` (Confidence)** también se beneficia indirectamente: `C_diferencia` (`models/confidence.md` §6) consume `Fuerza Ofensiva`/`Defensiva` de ambos equipos — con Variable003 y Variable004 ambas operacionalizadas, esa entrada deja de depender de datos inexistentes por falta de fórmula, aunque siga dependiendo de que existan filas reales.
+
+---
+
+# Validaciones — MODEL-010
+
+- **¿La especificación V1 contradice la fórmula ya aprobada en la sección 6.2?** No — la transcribe completa, corrigiendo únicamente la dirección de "porterías en cero" para que sea consistente con el invariante que el propio documento ya declaraba ("`Z_def` alto = peor desempeño").
+- **¿Se fija algún peso sin justificar?** No — `vᵢ'` usa ponderación igualitaria (mismo criterio que `MODEL-009`) y `s_def` se deriva matemáticamente de esos pesos, con la misma metodología, ajustada al número real de métricas (4, no 3).
+- **¿Se reutiliza algo de Offensive Strength sin que el documento lo autorice?** No — `N` se reutiliza porque la sección 6.2 ya lo dice explícitamente ("misma ventana de N partidos"); `M_forma`/`Pen` ya estaban reutilizados desde la sección 6.1 original, sin cambios de esta misión. Los pesos `vᵢ'` y `s_def` son símbolos propios, nunca reutilizados de Variable003.
+- **¿Se introdujo alguna hipótesis nueva no anclada en el texto?** Una sola, declarada explícitamente como corrección de consistencia interna (sección 15) — no como un hallazgo experimental ni una preferencia de diseño: la dirección de "porterías en cero" queda determinada por dos hechos que el documento ya afirmaba (el invariante de `Z_def` y el significado positivo de una portería en cero), no por una elección arbitraria de esta misión.
+- **¿Es reproducible?** Sí — una vez fijados `N`, `vᵢ'` y `s_def` (aunque sean placeholders), la fórmula es una función determinista de los datos de entrada.
+
+---
+
+# Cierre obligatorio — MODEL-010
+
+**1. Definición operacional.**
+Variable004 (Solidez Defensiva) mide la capacidad de una selección para impedir producción ofensiva rival, como índice compuesto estandarizado (0-100) de `xGA`/goles recibidos/remates permitidos/tasa sin portería en cero de sus últimos `N=10` partidos oficiales, relativo a las demás selecciones de la misma competición en la misma ventana — sección 13.
+
+**2. Fuente de datos.**
+`estadisticas_partido.csv` (`xGA` y remates permitidos, ambos vía *self-join* sobre `id_partido` contra la fila del rival) y `partidos.csv` (goles recibidos, directo) — sección 14. Las 4 métricas confirmadas derivables hoy, sin ningún componente bloqueado (a diferencia de Variable003).
+
+**3. Métricas internas.**
+`xGA`, `goles_recibidos`, `remates_permitidos`, `tasa_sin_porteria_en_cero` — sección 16. La cuarta reemplaza a "porterías en cero" tal cual, por consistencia de signo (sección 15).
+
+**4. Fórmula matemática oficial.**
+`Z_def = (1/4)·z_xGA + (1/4)·z_goles_recibidos + (1/4)·z_remates_permitidos + (1/4)·z_tasa_sin_porteria_en_cero`; `P_def = 100·(1 − Φ(Z_def/0.5))` — sección 15. Pesos iguales (neutral); `s_def` derivado matemáticamente de los pesos, no calibrado.
+
+**5. Ventana temporal.**
+`N = 10` últimos partidos oficiales, reutilizado explícitamente de Variable003 (autorizado por la sección 6.2 original) — sección 16. Amistosos y competiciones sin tratamiento diferenciado.
+
+**6. Rango.**
+0 a 100, garantizado por construcción de `Φ` — sección 17.
+
+**7. Casos límite.**
+Menos de `N` partidos → `muestra_reducida=True`; cero partidos → `disponible=False`, pipeline se detiene (Nivel A); fila individual corrupta → se descarta sola; `σ=0`/indefinida → esa métrica se excluye, o toda la variable si las 4 lo están — sección 18.
+
+**8. Documentos afectados.**
+`docs/03` (actualización editorial futura, fuera de esta misión), `docs/17`/`docs/30` (sin cambios, ya consistentes), `app/preparation/preparation.py` (consumidor futuro de `BUILD-019`), `models/offensive-strength.md` (fuente de `N` reutilizado), `models/parameter-calibration.md` (sin cambios al catálogo) — sección 20.
+
+**9. Impacto inmediato sobre BUILD-019.**
+Desbloquea el camino metodológico completo para que una futura `BUILD-019` implemente Variable004 en `VariablePreparation`, siguiendo exactamente el patrón ya validado por `BUILD-018` — sin ninguna decisión de diseño pendiente. No desbloquea, por sí sola, una predicción real: `estadisticas_partido.csv`/`partidos.csv` siguen sin filas reales. Requiere, además, aprobación explícita del Arquitecto Estadístico Humano antes de implementarse en código (Constitución, Art. 2.9/Art. 5) — sección 21.
+
+---
+
+# Fuera de alcance de MODEL-010
+
+- No se implementa código Python ni pseudocódigo ejecutable.
+- No se modifica el Runtime, `PredictionContext` ni `Engine02` (código).
+- No se calibra ningún peso con evidencia real — `vᵢ'`/`s_def`/`N` son placeholders estructurales, documentados como tales.
+- No se corrige la discrepancia de "Grandes Oportunidades Concedidas" en `engine/02` (ya documentada, sin resolver, desde la sección 5 original).
+- No se actualiza `docs/03-Variables.md` (columna "Método de cálculo") — pertenece a una misión de `docs/`, no de `models/`.
+- No se aprueba esta especificación como definitiva — queda pendiente de revisión por el Arquitecto Estadístico Humano.
 
 ---
 
