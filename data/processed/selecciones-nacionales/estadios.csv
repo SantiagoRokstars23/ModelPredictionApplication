@@ -1,1 +1,33 @@
 id_estadio,nombre,ciudad,pais,capacidad,tipo_superficie,altitud_metros,techado
+EST-000001,Estadio Monumental Antonio Vespucio Liberti,Buenos Aires,Argentina,85018,natural,25,false
+EST-000002,Wembley Stadium,Londres,Inglaterra,90000,natural,11,false
+EST-000003,Stade de France,Saint-Denis,Francia,81338,natural,35,false
+EST-000004,Estádio do Maracanã,Río de Janeiro,Brasil,78838,natural,10,false
+EST-000005,Estadio Santiago Bernabéu,Madrid,España,83186,natural,667,true
+EST-000006,Allianz Arena,Múnich,Alemania,70000,natural,520,false
+EST-000007,Estádio da Luz,Lisboa,Portugal,68100,natural,60,false
+EST-000008,Stadio Giuseppe Meazza (San Siro),Milán,Italia,75923,natural,132,false
+EST-000009,Johan Cruijff ArenA,Ámsterdam,Países Bajos,55865,natural,-2,true
+EST-000010,King Baudouin Stadium,Bruselas,Bélgica,50093,natural,13,false
+EST-000011,Stadion Maksimir,Zagreb,Croacia,25912,natural,122,false
+EST-000012,Estadio Metropolitano Roberto Meléndez,Barranquilla,Colombia,46788,natural,5,false
+EST-000013,Estadio Azteca,Ciudad de México,México,87523,natural,2200,false
+EST-000014,Estadio Centenario,Montevideo,Uruguay,60235,natural,22,false
+EST-000015,MetLife Stadium,East Rutherford,Estados Unidos,82500,natural,4,false
+EST-000016,Estadio Nacional de Japón,Tokio,Japón,68000,natural,40,false
+EST-000017,Parken,Copenhague,Dinamarca,38190,natural,5,true
+EST-000018,Ernst-Happel-Stadion,Viena,Austria,50865,natural,171,false
+EST-000019,PGE Narodowy,Varsovia,Polonia,58580,natural,108,true
+EST-000020,Strawberry Arena,Estocolmo,Suecia,50000,natural,28,false
+EST-000021,St. Jakob-Park,Basilea,Suiza,37500,natural,279,false
+EST-000022,BMO Field,Toronto,Canadá,30991,natural,76,false
+EST-000023,Stadium Australia,Sídney,Australia,83500,natural,39,false
+EST-000024,Seoul World Cup Stadium,Seúl,Corea del Sur,66704,natural,42,false
+EST-000025,Estadio Mohammed V,Casablanca,Marruecos,45000,natural,50,false
+EST-000026,Estadio Internacional de El Cairo,El Cairo,Egipto,75000,natural,74,false
+EST-000027,Estadio Nacional Moshood Abiola,Abuya,Nigeria,60491,natural,360,false
+EST-000028,Estadio Nelson Mandela,Argel,Argelia,40784,natural,113,false
+EST-000029,Estadio Olímpico Alassane Ouattara,Ebimpé (Abiyán),Costa de Marfil,60012,natural,24,false
+EST-000030,Estadio Abdoulaye Wade,Diamniadio (Dakar),Senegal,50000,natural,30,false
+EST-000031,Estadio Azadi,Teherán,Irán,78116,natural,1184,false
+EST-000032,Estadio Şükrü Saracoğlu,Estambul,Turquía,47430,natural,42,false

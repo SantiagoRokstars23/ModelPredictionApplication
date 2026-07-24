@@ -2,9 +2,9 @@
 
 **Directorio:** `data/processed/selecciones-nacionales/`
 
-**Versión:** 1.1.0
+**Versión:** 1.2.0
 
-**Estado:** Activo (esquema aprobado; `selecciones.csv` y `competiciones.csv` poblados con datos reales, resto de entidades pendientes)
+**Estado:** Activo (esquema aprobado; `selecciones.csv`, `competiciones.csv` y `estadios.csv` poblados con datos reales, resto de entidades pendientes)
 
 ---
 
@@ -45,7 +45,7 @@ Se resuelve de la siguiente forma:
 
 # Estado de los archivos
 
-`selecciones.csv` contiene 40 registros reales (Top 40 FIFA, Misión 002). `competiciones.csv` contiene 11 registros reales: la fila de catálogo `Amistosos Internacionales` (Misión 001) más 10 competiciones internacionales pobladas en la Misión 006. `torneos.csv` conserva únicamente la fila de referencia `TOR-2026-AMISTOSOS` (Misión 001); no se han creado aún ediciones específicas (con fechas y sedes reales) para las 10 competiciones incorporadas en MS-006, lo cual queda diferido a una misión futura. El resto de los CSV de este módulo (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`, `arbitros`, `estadios`) contienen únicamente la fila de encabezado — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
+`selecciones.csv` contiene 40 registros reales (Top 40 FIFA, Misión 002). `competiciones.csv` contiene 11 registros reales: la fila de catálogo `Amistosos Internacionales` (Misión 001) más 10 competiciones internacionales pobladas en la Misión 006. `torneos.csv` conserva únicamente la fila de referencia `TOR-2026-AMISTOSOS` (Misión 001); no se han creado aún ediciones específicas (con fechas y sedes reales) para las 10 competiciones incorporadas en MS-006, lo cual queda diferido a una misión futura. `estadios.csv` contiene 32 registros reales (Misión MS-013), poblados siguiendo estrictamente el protocolo de ingesta (`docs/38-Protocolo-Oficial-Ingesta-Datos.md`) — un estadio principal por cada una de las 32 selecciones (de las 40 ya catalogadas) para las que se pudo verificar capacidad, superficie y altitud con fuentes suficientemente confiables; quedan pendientes 8 selecciones (`ECU`, `NOR`, `UKR`, `PAN`, `RUS`, `WAL`, `HUN`, `CZE`) y cualquier estadio adicional usado por amistosos o sedes neutrales de torneos. Fuentes y limitaciones detalladas en `CHANGELOG.md` (entrada `MS-013`) y `docs/00-Project-Tracker.md`. El resto de los CSV de este módulo (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`, `arbitros`) contienen únicamente la fila de encabezado — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
 
 ---
 
@@ -219,6 +219,9 @@ Se resuelve de la siguiente forma:
 | `techado` | BOOLEAN | | Insumo de Factores Externos (anula la variable clima si es techado) |
 
 **Restricciones:** `capacidad` > 0; `altitud_metros` puede ser negativo.
+**Formato de `id_estadio` (fijado en `MS-013`, sin precedente previo en este documento):** `EST-NNNNNN` (6 dígitos), mismo patrón ya usado por `competiciones.csv` (`COMP-NNNNNN`).
+**Hallazgo heredado de `MS-012`/`docs/38`, no resuelto en `MS-013`:** el ENUM de `tipo_superficie` nunca fue formalizado en ningún documento — los 32 registros poblados en `MS-013` usan el valor literal `natural` (césped natural o híbrido de césped natural predominante, verificado por selección), sin inventar una taxonomía de valores permitidos.
+**Datos poblados en la Misión MS-013:** 32 estadios reales (uno por selección, para 32 de las 40 ya catalogadas en `selecciones.csv`) — ver `CHANGELOG.md` para fuentes y limitaciones completas.
 
 ---
 
