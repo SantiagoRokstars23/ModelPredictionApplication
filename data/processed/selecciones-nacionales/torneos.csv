@@ -1,2 +1,14 @@
 id_torneo,id_competicion,edicion,paises_organizadores,fecha_inicio,fecha_fin,formato,numero_selecciones_participantes
 TOR-2026-AMISTOSOS,COMP-000001,2026,"N/A (sede variable, ver partidos.id_estadio)",2026-01-01,2026-12-31,Partidos amistosos bilaterales sin fase eliminatoria,
+TOR-2026-MUNDIAL,COMP-000002,2026,"Estados Unidos, México, Canadá",2026-06-11,2026-07-19,"Fase de grupos (12 grupos de 4) + eliminación directa desde dieciseisavos de final",48
+TOR-2026-ELIM-CONMEBOL,COMP-000003,2026,"N/A (sede variable, ver partidos.id_estadio)",2023-09-07,2025-09-09,"Todos contra todos ida y vuelta (18 fechas), tabla única de 10 selecciones",10
+TOR-2026-ELIM-UEFA,COMP-000003,2026,"N/A (sede variable, ver partidos.id_estadio)",2025-03-21,2026-03-31,"Fase de grupos (6 grupos de 5 + 6 grupos de 4) + repechaje de 16 selecciones en 4 llaves",54
+TOR-2026-ELIM-CONCACAF,COMP-000003,2026,"N/A (sede variable, ver partidos.id_estadio)",2024-03-22,2025-11-18,"Tres rondas eliminatorias; ronda final: 3 grupos de 4 todos contra todos ida y vuelta",32
+TOR-2026-ELIM-AFC,COMP-000003,2026,"N/A (sede variable, ver partidos.id_estadio)",2023-10-12,2025-11-18,"Cinco rondas, de eliminación directa a grupos todos contra todos",46
+TOR-2026-ELIM-CAF,COMP-000003,2026,"N/A (sede variable, ver partidos.id_estadio)",2023-11-15,2025-11-16,"Fase de grupos (9 grupos de 6, todos contra todos ida y vuelta) + repechaje",53
+TOR-2024-EUROCOPA,COMP-000004,2024,Alemania,2024-06-14,2024-07-14,"Fase de grupos (6 grupos de 4) + eliminación directa desde octavos de final",24
+TOR-2024-NATIONSLEAGUE,COMP-000005,2024-25,"N/A (fase de liga multi-sede; fase final en Alemania)",2024-09-05,2025-06-08,"Ligas A/B/C (grupos de 4) y D (grupos de 3) + cuartos de final y fase final a 4 selecciones en Liga A",54
+TOR-2024-COPAAMERICA,COMP-000006,2024,Estados Unidos,2024-06-20,2024-07-14,"Fase de grupos (4 grupos de 4) + eliminación directa desde cuartos de final",16
+TOR-2025-GOLDCUP,COMP-000007,2025,"Estados Unidos, Canadá",2025-06-14,2025-07-06,"Fase de grupos (4 grupos de 4) + eliminación directa desde cuartos de final",16
+TOR-2023-COPAASIATICA,COMP-000008,2023,Catar,2024-01-12,2024-02-10,"Fase de grupos (6 grupos de 4) + eliminación directa desde dieciseisavos de final",24
+TOR-2025-COPAAFRICANA,COMP-000009,2025,Marruecos,2025-12-21,2026-01-18,"Fase de grupos (6 grupos de 4) + eliminación directa desde dieciseisavos de final",24

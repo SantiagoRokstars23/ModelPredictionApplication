@@ -2,9 +2,9 @@
 
 **Directorio:** `data/processed/selecciones-nacionales/`
 
-**Versión:** 1.2.0
+**Versión:** 1.4.0
 
-**Estado:** Activo (esquema aprobado; `selecciones.csv`, `competiciones.csv` y `estadios.csv` poblados con datos reales, resto de entidades pendientes)
+**Estado:** Activo (esquema aprobado; `selecciones.csv`, `competiciones.csv`, `estadios.csv`, `arbitros.csv` y `torneos.csv` poblados con datos reales, resto de entidades pendientes)
 
 ---
 
@@ -45,7 +45,7 @@ Se resuelve de la siguiente forma:
 
 # Estado de los archivos
 
-`selecciones.csv` contiene 40 registros reales (Top 40 FIFA, Misión 002). `competiciones.csv` contiene 11 registros reales: la fila de catálogo `Amistosos Internacionales` (Misión 001) más 10 competiciones internacionales pobladas en la Misión 006. `torneos.csv` conserva únicamente la fila de referencia `TOR-2026-AMISTOSOS` (Misión 001); no se han creado aún ediciones específicas (con fechas y sedes reales) para las 10 competiciones incorporadas en MS-006, lo cual queda diferido a una misión futura. `estadios.csv` contiene 32 registros reales (Misión MS-013), poblados siguiendo estrictamente el protocolo de ingesta (`docs/38-Protocolo-Oficial-Ingesta-Datos.md`) — un estadio principal por cada una de las 32 selecciones (de las 40 ya catalogadas) para las que se pudo verificar capacidad, superficie y altitud con fuentes suficientemente confiables; quedan pendientes 8 selecciones (`ECU`, `NOR`, `UKR`, `PAN`, `RUS`, `WAL`, `HUN`, `CZE`) y cualquier estadio adicional usado por amistosos o sedes neutrales de torneos. Fuentes y limitaciones detalladas en `CHANGELOG.md` (entrada `MS-013`) y `docs/00-Project-Tracker.md`. El resto de los CSV de este módulo (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`, `arbitros`) contienen únicamente la fila de encabezado — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
+`selecciones.csv` contiene 40 registros reales (Top 40 FIFA, Misión 002). `competiciones.csv` contiene 11 registros reales: la fila de catálogo `Amistosos Internacionales` (Misión 001) más 10 competiciones internacionales pobladas en la Misión 006. `torneos.csv` contiene 14 registros reales: la fila de referencia `TOR-2026-AMISTOSOS` (Misión 001) más 13 ediciones reales incorporadas en la Misión MS-015 — la edición más reciente ya oficialmente celebrada de cada una de las 8 competiciones cubiertas por el brief de esa misión (Copa Mundial FIFA 2026; Eurocopa 2024; Copa América 2024; UEFA Nations League 2024-25; CONCACAF Gold Cup 2025; Copa Asiática 2023; Copa Africana de Naciones 2025), y 5 filas para "Eliminatorias Mundial FIFA" (una por confederación — CONMEBOL, UEFA, CONCACAF, AFC, CAF — dado que cada proceso clasificatorio real tiene sede, formato y calendario propios, sin un formato único global que agrupe a las seis confederaciones). Quedan pendientes las ediciones de OFC Nations Cup y Finalissima (`COMP-000010`/`COMP-000011`, fuera del alcance del brief de `MS-015`) y la clasificatoria OFC hacia el Mundial 2026. Fuentes y limitaciones detalladas en `CHANGELOG.md` (entrada `MS-015`). `estadios.csv` contiene 32 registros reales (Misión MS-013), poblados siguiendo estrictamente el protocolo de ingesta (`docs/38-Protocolo-Oficial-Ingesta-Datos.md`) — un estadio principal por cada una de las 32 selecciones (de las 40 ya catalogadas) para las que se pudo verificar capacidad, superficie y altitud con fuentes suficientemente confiables; quedan pendientes 8 selecciones (`ECU`, `NOR`, `UKR`, `PAN`, `RUS`, `WAL`, `HUN`, `CZE`) y cualquier estadio adicional usado por amistosos o sedes neutrales de torneos. Fuentes y limitaciones detalladas en `CHANGELOG.md` (entrada `MS-013`) y `docs/00-Project-Tracker.md`. `arbitros.csv` contiene 51 registros reales (Misión MS-014): el panel completo de árbitros principales (no asistentes, no VAR) designados oficialmente por FIFA para la Copa Mundial FIFA 2026, cubriendo las seis confederaciones (AFC, CAF, CONCACAF, CONMEBOL, OFC, UEFA) — fuente primaria, `inside.fifa.com` ("Match officials appointed for FIFA World Cup 2026"), con el desglose nominal por confederación verificado contra la tabla ya organizada de Wikipedia. Fuentes y limitaciones detalladas en `CHANGELOG.md` (entrada `MS-014`). El resto de los CSV de este módulo (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`) contienen únicamente la fila de encabezado — cumpliendo la regla "nunca inventar datos" mientras no exista una fuente verificada.
 
 ---
 
@@ -202,6 +202,10 @@ Se resuelve de la siguiente forma:
 | `activo` | BOOLEAN | | Filtra árbitros vigentes |
 
 **Restricciones:** `nombre_completo` obligatorio; `categoria = fifa_internacional` requerido en torneos FIFA/confederación.
+**Formato de `id_arbitro` (fijado en `MS-014`, sin precedente previo en este documento):** `ARB-NNNNNN` (6 dígitos), mismo patrón ya usado por `competiciones.csv` (`COMP-NNNNNN`) y `estadios.csv` (`EST-NNNNNN`, `MS-013`).
+**Valores de `confederacion_arbitral` (ENUM) usados en `MS-014`:** `AFC`, `CAF`, `CONCACAF`, `CONMEBOL`, `OFC`, `UEFA` — mismos seis códigos de confederación ya usados en `selecciones.csv`/`competiciones.csv` (`confederacion_organizadora` excluye `FIFA` de esta columna específica, a diferencia de `competiciones.csv`: un árbitro pertenece siempre a una única confederación real, nunca a "FIFA" como panel propio — la designación FIFA es la categoría, no la confederación).
+**Valores de `categoria` (ENUM) confirmados:** solo `fifa_internacional` está citado textualmente en este documento (ver "Restricciones" arriba) — `MS-014` no formaliza ningún otro valor (hallazgo heredado de `docs/38`, no resuelto).
+**Datos poblados en la Misión MS-014:** 51 árbitros reales — ver `CHANGELOG.md` para fuentes y limitaciones completas.
 
 ---
 
@@ -277,6 +281,8 @@ Se resuelve de la siguiente forma:
 **Campo eliminado (decisión de esta misión):** `campeon_id_seleccion` — dato derivado de `partidos` (fila con `fase = final`), nunca almacenado.
 **Restricciones:** `fecha_fin` ≥ `fecha_inicio`.
 **Datos de catálogo incluidos en esta misión:** fila `TOR-2026-AMISTOSOS` (ver convención dedicada).
+**Convención de `id_torneo` para "Eliminatorias Mundial FIFA" (fijada en `MS-015`):** `TOR-<año del Mundial>-ELIM-<CONFEDERACIÓN>` (ej. `TOR-2026-ELIM-CONMEBOL`) — una fila por confederación, no una sola fila para toda la competición `COMP-000003`, porque cada proceso clasificatorio real (CONMEBOL, UEFA, CONCACAF, AFC, CAF) tiene su propio calendario, formato y número de participantes, sin una sede ni un formato único que los agrupe. `paises_organizadores` usa la misma convención ya fijada para amistosos (`"N/A (sede variable, ver partidos.id_estadio)"`) para todo torneo sin una sede fija (clasificatorias; Nations League en su fase de liga).
+**Datos poblados en la Misión MS-015:** 13 ediciones reales — ver `CHANGELOG.md` para fuentes completas por torneo.
 
 ---
 

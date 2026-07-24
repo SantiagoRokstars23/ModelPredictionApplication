@@ -1,1 +1,52 @@
 id_arbitro,nombre_completo,nacionalidad,confederacion_arbitral,categoria,activo
+ARB-000001,Omar Al Ali,Emiratos Árabes Unidos,AFC,fifa_internacional,true
+ARB-000002,Abdulrahman Al-Jassim,Catar,AFC,fifa_internacional,true
+ARB-000003,Khalid Al-Turais,Arabia Saudita,AFC,fifa_internacional,true
+ARB-000004,Alireza Faghani,Australia,AFC,fifa_internacional,true
+ARB-000005,Ma Ning,China,AFC,fifa_internacional,true
+ARB-000006,Adham Makhadmeh,Jordania,AFC,fifa_internacional,true
+ARB-000007,Ilgiz Tantashev,Uzbekistán,AFC,fifa_internacional,true
+ARB-000008,Yusuke Araki,Japón,AFC,fifa_internacional,true
+ARB-000009,Pierre Atcho,Gabón,CAF,fifa_internacional,true
+ARB-000010,Dahane Beida,Mauritania,CAF,fifa_internacional,true
+ARB-000011,Mustapha Ghorbal,Argelia,CAF,fifa_internacional,true
+ARB-000012,Jalal Jayed,Marruecos,CAF,fifa_internacional,true
+ARB-000013,Amin Omar,Egipto,CAF,fifa_internacional,true
+ARB-000014,Abongile Tom,Sudáfrica,CAF,fifa_internacional,true
+ARB-000015,Iván Barton,El Salvador,CONCACAF,fifa_internacional,true
+ARB-000016,Juan Gabriel Calderón,Costa Rica,CONCACAF,fifa_internacional,true
+ARB-000017,Ismail Elfath,Estados Unidos,CONCACAF,fifa_internacional,true
+ARB-000018,Oshane Nation,Jamaica,CONCACAF,fifa_internacional,true
+ARB-000019,Drew Fischer,Canadá,CONCACAF,fifa_internacional,true
+ARB-000020,Katia Itzel García,México,CONCACAF,fifa_internacional,true
+ARB-000021,Saíd Martínez,Honduras,CONCACAF,fifa_internacional,true
+ARB-000022,Tori Penso,Estados Unidos,CONCACAF,fifa_internacional,true
+ARB-000023,César Arturo Ramos,México,CONCACAF,fifa_internacional,true
+ARB-000024,Ramon Abatti,Brasil,CONMEBOL,fifa_internacional,true
+ARB-000025,Juan Gabriel Benítez,Paraguay,CONMEBOL,fifa_internacional,true
+ARB-000026,Raphael Claus,Brasil,CONMEBOL,fifa_internacional,true
+ARB-000027,Yael Falcón,Argentina,CONMEBOL,fifa_internacional,true
+ARB-000028,Cristián Garay,Chile,CONMEBOL,fifa_internacional,true
+ARB-000029,Darío Herrera,Argentina,CONMEBOL,fifa_internacional,true
+ARB-000030,Kevin Ortega,Perú,CONMEBOL,fifa_internacional,true
+ARB-000031,Andrés Rojas,Colombia,CONMEBOL,fifa_internacional,true
+ARB-000032,Wilton Sampaio,Brasil,CONMEBOL,fifa_internacional,true
+ARB-000033,Gustavo Tejera,Uruguay,CONMEBOL,fifa_internacional,true
+ARB-000034,Facundo Tello,Argentina,CONMEBOL,fifa_internacional,true
+ARB-000035,Jesús Valenzuela,Venezuela,CONMEBOL,fifa_internacional,true
+ARB-000036,Campbell-Kirk Kawana-Waugh,Nueva Zelanda,OFC,fifa_internacional,true
+ARB-000037,Espen Eskås,Noruega,UEFA,fifa_internacional,true
+ARB-000038,Alejandro Hernández Hernández,España,UEFA,fifa_internacional,true
+ARB-000039,István Kovács,Rumania,UEFA,fifa_internacional,true
+ARB-000040,François Letexier,Francia,UEFA,fifa_internacional,true
+ARB-000041,Danny Makkelie,Países Bajos,UEFA,fifa_internacional,true
+ARB-000042,Szymon Marciniak,Polonia,UEFA,fifa_internacional,true
+ARB-000043,Maurizio Mariani,Italia,UEFA,fifa_internacional,true
+ARB-000044,Glenn Nyberg,Suecia,UEFA,fifa_internacional,true
+ARB-000045,Michael Oliver,Inglaterra,UEFA,fifa_internacional,true
+ARB-000046,João Pinheiro,Portugal,UEFA,fifa_internacional,true
+ARB-000047,Sandro Schärer,Suiza,UEFA,fifa_internacional,true
+ARB-000048,Anthony Taylor,Inglaterra,UEFA,fifa_internacional,true
+ARB-000049,Clément Turpin,Francia,UEFA,fifa_internacional,true
+ARB-000050,Slavko Vinčić,Eslovenia,UEFA,fifa_internacional,true
+ARB-000051,Felix Zwayer,Alemania,UEFA,fifa_internacional,true
