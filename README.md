@@ -2,7 +2,7 @@
 
 Sistema probabilístico para la predicción de partidos de fútbol y la evaluación de mercados de apuestas deportivas.
 
-Este repositorio **no es una aplicación de software tradicional**: es un repositorio de documentación, investigación y prompts en Markdown pensado para ser operado por agentes de Claude Code. No contiene código fuente ejecutable, por lo que no existen comandos de build, lint ni test.
+Este repositorio nació como un repositorio de documentación, investigación y prompts en Markdown, pensado para ser operado por agentes de Claude Code. **Ya no es únicamente eso**: desde `BUILD-001` existe, además, una aplicación Python real (`app/`) que implementa esa documentación — Runtime, Capa de Preparación de Variables, los 6 motores del Engine, Persistencia (SQLAlchemy/PostgreSQL/Alembic) y una API mínima (FastAPI) — junto con una Base de Conocimiento (`data/processed/`) que ya contiene datos reales para varias entidades. `docs/`, `models/` y `engine/` siguen siendo la fuente de verdad conceptual y matemática; `app/` es su implementación en código, sin redefinir nada de lo que esos documentos ya deciden.
 
 El objetivo del proyecto no es adivinar resultados, sino construir un modelo estadístico capaz de generar probabilidades **explicables, auditables y rentables a largo plazo**.
 
@@ -30,32 +30,64 @@ ModelPredictionApplication/
 │
 ├── README.md
 ├── CLAUDE.md
+├── LICENSE
+├── CHANGELOG.md
+│
+├── pyproject.toml         # Dependencias y metadatos del paquete Python (FastAPI, SQLAlchemy, Alembic, pytest...)
+├── Dockerfile             # Imagen de la aplicación (Python 3.12-slim + uvicorn)
+├── docker-compose.yml     # Orquestación mínima de desarrollo: app + PostgreSQL 16
+├── alembic.ini            # Configuración de migraciones de base de datos
+├── .env.example           # Variables de entorno de ejemplo (nunca el archivo .env real)
 │
 ├── .claude/
 │   └── agents/            # Definición de los agentes especializados
 │
-├── docs/                  # Documentación funcional del modelo
-├── engine/                # Motores lógicos de predicción
-├── models/                # Investigación matemática y estadística
+├── app/                   # Aplicación Python real — ver sección dedicada más abajo
+├── migrations/            # Migraciones Alembic (versions/ vacío: sin datos aún poblados en PostgreSQL)
+├── tests/                 # Bootstrap del paquete de pruebas (sin casos de prueba todavía)
+├── scripts/               # Bootstrap del directorio (sin scripts todavía — ver scripts/README.md)
+│
+├── docs/                  # Documentación funcional del modelo (40 documentos)
+├── engine/                # Especificación conceptual de los 6 motores (Markdown) — no confundir con app/engine/
+├── models/                # Investigación matemática y estadística (13 documentos)
 ├── learning/              # Aprendizaje continuo: análisis de errores y recalibración
-├── prompts/               # Plantillas reutilizables para tareas específicas
+├── prompts/                # Plantillas reutilizables para tareas específicas
 │
 └── data/                  # Base de conocimiento del modelo
-    ├── raw/               # Datos crudos desde fuentes externas (nunca se modifican)
-    ├── processed/         # Datos validados y normalizados (única fuente para engine/)
-    ├── predictions/        # Predicciones generadas por el modelo
-    ├── results/            # Resultados oficiales para auditoría
-    ├── audit/              # Métricas históricas de rendimiento
-    └── archive/            # Información histórica (nunca se elimina)
+    ├── raw/               # Datos crudos desde fuentes externas (nunca se modifican) — sin archivos de datos todavía
+    ├── processed/         # Datos validados y normalizados (única fuente para engine/) — ver estado real abajo
+    ├── predictions/        # Predicciones generadas por el modelo — sin poblar todavía
+    ├── results/            # Resultados oficiales para auditoría — sin poblar todavía
+    ├── audit/              # Métricas históricas de rendimiento — sin poblar todavía
+    └── archive/            # Información histórica (nunca se elimina) — sin poblar todavía
 ```
 
-> `scripts/` y `excel/` forman parte de la arquitectura objetivo pero todavía no existen en este repositorio. Antes de asumir que existen, verifica el estado real del directorio.
+> `excel/` forma parte de la arquitectura objetivo original de `CLAUDE.md` pero todavía no existe en este repositorio.
+
+### `app/` — La aplicación Python real
+
+Materializa, paquete por paquete, la arquitectura fijada en [`docs/35-Arquitectura-Oficial-del-Proyecto-Python.md`](docs/35-Arquitectura-Oficial-del-Proyecto-Python.md). El Engine (`app/engine/`) nunca conoce FastAPI, SQLAlchemy ni PostgreSQL — su única entrada es el `PredictionContext`.
+
+| Paquete | Contenido | Estado |
+|---|---|---|
+| `app/api/` | `predict_controller.py` — único endpoint, `POST /predict`, invoca `PredictMatchUseCase` | Creado (`BUILD-026`); aún no montado en `app/main.py` |
+| `app/application/` | `predict_match.py` — `PredictMatchUseCase`, primer caso de uso de punta a punta | Implementado (`BUILD-025`) |
+| `app/runtime/` | `prediction_context.py` (el objeto `PredictionContext`, append-only), `runtime.py` (`PredictionRuntime`), `engine_pipeline.py` (`EnginePipeline`, integra Preparación + Engine) | Implementado (`BUILD-004`/`BUILD-005`/`INT-001`) |
+| `app/preparation/` | `preparation.py` (`VariablePreparation`) — transforma la Base de Conocimiento en las 12 Variables Oficiales | Implementado para 8 de 9 variables activas (`BUILD-017` a `BUILD-024`) |
+| `app/engine/` | `engine01.py` a `engine06.py` (los 6 motores) + `engine_runner.py` (orquestador por capas) | Implementado (`BUILD-007`, `BUILD-009` a `BUILD-015`) — sin datos reales suficientes todavía para producir un número final |
+| `app/persistence/` | Acceso a datos: sesión SQLAlchemy, repositorios, `CsvPreparationRepository`, `HistoricalMuGolProvider`, `RuntimePersistence` | Implementado (`BUILD-003`, `BUILD-008`, `BUILD-016`, `BUILD-017`) |
+| `app/models/` | Clases SQLAlchemy de las 14 tablas físicas (`docs/33`) | Declaradas; ninguna tabla poblada en PostgreSQL todavía |
+| `app/schemas/` | Contratos Pydantic de la API | Bootstrap, sin esquemas propios todavía |
+| `app/services/` | Validación previa, auditoría, bankroll (fuera del camino crítico del Runtime) | Bootstrap, sin implementación todavía |
+| `app/config/` | Configuración transversal | Bootstrap |
+
+**Cadena ya integrada, de punta a punta:** `PredictMatchUseCase → EnginePipeline → VariablePreparation → EngineRunner → Engine01…Engine06`. El único tramo que falta para que sea alcanzable por HTTP es montar el router de `app/api/` en `app/main.py`. Ninguna predicción real es posible todavía porque `data/processed/` no tiene el volumen mínimo de partidos/estadísticas (ver "Estado actual").
 
 ### docs/ — Reglas y filosofía del modelo
 
 | Documento | Contenido |
 |---|---|
-| [`00-Project-Tracker.md`](docs/00-Project-Tracker.md) | Seguimiento oficial del estado de todas las misiones del proyecto |
+| [`00-Project-Tracker.md`](docs/00-Project-Tracker.md) | Seguimiento oficial del estado de **todas** las misiones del proyecto — la referencia más actualizada del repositorio |
 | [`01-principios.md`](docs/01-principios.md) | Principios rectores del modelo |
 | [`02-modelo.md`](docs/02-modelo.md) | Descripción general del Modelo Santiago |
 | [`03-Variables.md`](docs/03-Variables.md) | Variables utilizadas por el modelo |
@@ -73,25 +105,43 @@ ModelPredictionApplication/
 | [`15-Capa-de-Preparacion-de-Variables.md`](docs/15-Capa-de-Preparacion-de-Variables.md) | Capa que transforma la Base de Conocimiento en variables normalizadas para el Engine |
 | [`16-Contrato-Oficial-de-Variables.md`](docs/16-Contrato-Oficial-de-Variables.md) | Tipo, unidad, rango y ciclo de vida de las 12 variables oficiales |
 | [`17-Matriz-de-Consumo-de-Variables.md`](docs/17-Matriz-de-Consumo-de-Variables.md) | Qué motor consume cada variable, y qué ocurre si falta |
-| [`18-Plan-de-Reconciliacion-Arquitectonica.md`](docs/18-Plan-de-Reconciliacion-Arquitectonica.md) | Inventario de inconsistencias del Engine y roadmap de reconciliación (MR-001) |
-| [`19-Architecture-Freeze-Review.md`](docs/19-Architecture-Freeze-Review.md) | Auditoría independiente del inventario anterior (AR-001) |
-| [`20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md`](docs/20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md) | Jerarquía de autoridad y roadmap de gobernanza documental (GR-001) |
-| [`21-Constitucion-del-Modelo-Santiago.md`](docs/21-Constitucion-del-Modelo-Santiago.md) | Principios estables de máxima autoridad conceptual (GOV-001) |
-| [`22-Manual-Operativo-del-Arquitecto-IA.md`](docs/22-Manual-Operativo-del-Arquitecto-IA.md) | Protocolo operativo de toda misión de arquitectura (GOV-002) |
-| [`23-Plan-Maestro-de-Reconciliacion-Operativa.md`](docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md) | Matriz de reconciliación y criterios de Architecture Freeze (AR-002) |
+| [`18-Plan-de-Reconciliacion-Arquitectonica.md`](docs/18-Plan-de-Reconciliacion-Arquitectonica.md) | Inventario de inconsistencias del Engine y roadmap de reconciliación (`MR-001`) |
+| [`19-Architecture-Freeze-Review.md`](docs/19-Architecture-Freeze-Review.md) | Auditoría independiente del inventario anterior (`AR-001`) |
+| [`20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md`](docs/20-Plan-de-Reconciliacion-de-Gobernanza-Documental.md) | Jerarquía de autoridad y roadmap de gobernanza documental (`GR-001`) |
+| [`21-Constitucion-del-Modelo-Santiago.md`](docs/21-Constitucion-del-Modelo-Santiago.md) | Principios estables de máxima autoridad conceptual (`GOV-001`) |
+| [`22-Manual-Operativo-del-Arquitecto-IA.md`](docs/22-Manual-Operativo-del-Arquitecto-IA.md) | Protocolo operativo de toda misión de arquitectura (`GOV-002`) |
+| [`23-Plan-Maestro-de-Reconciliacion-Operativa.md`](docs/23-Plan-Maestro-de-Reconciliacion-Operativa.md) | Matriz de reconciliación y criterios de Architecture Freeze (`AR-002`) |
+| [`24-Analisis-Arquitectonico-INC-04-INC-05.md`](docs/24-Analisis-Arquitectonico-INC-04-INC-05.md) | Resolución de las incidencias de Compatibilidad Táctica y Contrato de Datos de Mercado (`MR-004`) |
+| [`25-Trazado-de-Ejecucion-del-Prediction-Pipeline.md`](docs/25-Trazado-de-Ejecucion-del-Prediction-Pipeline.md) | `PredictionRequest`, traza numérica de fases y `PredictionReport` |
+| [`26-Runtime-del-Modelo.md`](docs/26-Runtime-del-Modelo.md) | El Runtime, el Objeto de Contexto append-only, logs y manejo de errores (`DEV-001`) |
+| [`27-Auditoria-de-Variables-Pendientes.md`](docs/27-Auditoria-de-Variables-Pendientes.md) | Clasificación A-E de disponibilidad real de dato, variable por variable (`DATA-001`) |
+| [`28-Catalogo-de-Variables-Derivadas.md`](docs/28-Catalogo-de-Variables-Derivadas.md) | Catálogo de variables derivadas/intermedias (`DATA-002`) |
+| [`29-Arquitectura-del-Runtime.md`](docs/29-Arquitectura-del-Runtime.md) | Los 7 componentes de implementación del Runtime, con nombre propio (`DEV-002`) |
+| [`30-Contrato-Oficial-del-Prediction-Context.md`](docs/30-Contrato-Oficial-del-Prediction-Context.md) | Especificación completa de `PredictionContext` y sus 10 bloques (`DEV-003`) |
+| [`31-Modelo-Fisico-de-la-Base-de-Conocimiento.md`](docs/31-Modelo-Fisico-de-la-Base-de-Conocimiento.md) | Modelo físico conceptual de la Base de Conocimiento (`DATA-003`) |
+| [`32-Modelo-Relacional-Oficial.md`](docs/32-Modelo-Relacional-Oficial.md) | Entidades, relaciones, dependencias y claves conceptuales (`DATA-004`) |
+| [`33-Modelo-Fisico-PostgreSQL.md`](docs/33-Modelo-Fisico-PostgreSQL.md) | Modelo físico PostgreSQL: tipos, restricciones, índices, UUID (`DATA-005`) |
+| [`34-Decision-Oficial-del-Stack-Tecnologico.md`](docs/34-Decision-Oficial-del-Stack-Tecnologico.md) | Python + FastAPI + SQLAlchemy + Alembic + pytest como stack oficial (`ARCH-000`) |
+| [`35-Arquitectura-Oficial-del-Proyecto-Python.md`](docs/35-Arquitectura-Oficial-del-Proyecto-Python.md) | Árbol de paquetes de `app/` y matriz de dependencias entre ellos (`DEV-004`) |
+| [`36-Estrategia-Oficial-de-Variables-Pendientes.md`](docs/36-Estrategia-Oficial-de-Variables-Pendientes.md) | Veredicto de implementabilidad de Variable006/007/008/009 (`GR-010`) |
+| [`37-Estrategia-Poblacion-Base-Conocimiento.md`](docs/37-Estrategia-Poblacion-Base-Conocimiento.md) | Orden oficial de población de CSV y Conjunto Mínimo Viable (`MS-011`) |
+| [`38-Protocolo-Oficial-Ingesta-Datos.md`](docs/38-Protocolo-Oficial-Ingesta-Datos.md) | Flujo de ingesta, fuentes por entidad y reglas de aceptación/rechazo de datos (`MS-012`) |
+| [`99-Mapa-Maestro.md`](docs/99-Mapa-Maestro.md) | Mapa de navegación de alto nivel de toda la arquitectura (`MAP-001`) |
 
-### engine/ — Motores de predicción
+### engine/ — Especificación conceptual de los motores (Markdown)
 
 Cada motor tiene una única responsabilidad. Consume exclusivamente variables ya preparadas por la Capa de Preparación de Variables ([`docs/15-Capa-de-Preparacion-de-Variables.md`](docs/15-Capa-de-Preparacion-de-Variables.md)) — nunca lee `data/processed/` directamente ni conoce su origen físico. Nunca accede directamente a Internet.
 
-| Motor | Responsabilidad |
-|---|---|
-| [`01-Offensive-Strength.md`](engine/01-Offensive-Strength.md) | Fuerza ofensiva de los equipos |
-| [`02-Defensive-Strength.md`](engine/02-Defensive-Strength.md) | Fuerza defensiva de los equipos |
-| [`03-Poisson.md`](engine/03-Poisson.md) | Distribución de probabilidades de marcadores |
-| [`04-Chaos-Index.md`](engine/04-Chaos-Index.md) | Índice de imprevisibilidad del partido |
-| [`05-Confidence.md`](engine/05-Confidence.md) | Nivel de confianza de la predicción |
-| [`06-Expected-Value.md`](engine/06-Expected-Value.md) | Valor esperado frente a las cuotas de mercado |
+> **No confundir con `app/engine/`**: este directorio (`engine/`) contiene la especificación conceptual en Markdown de cada motor; `app/engine/` contiene su implementación real en Python (`engine01.py` a `engine06.py`). El primero es la fuente de verdad matemática (junto con `models/`); el segundo es su traducción a código, sin redefinir nada.
+
+| Motor | Responsabilidad | Implementación en `app/engine/` |
+|---|---|---|
+| [`01-Offensive-Strength.md`](engine/01-Offensive-Strength.md) | Fuerza ofensiva de los equipos | `engine01.py` |
+| [`02-Defensive-Strength.md`](engine/02-Defensive-Strength.md) | Fuerza defensiva de los equipos | `engine02.py` |
+| [`03-Poisson.md`](engine/03-Poisson.md) | Distribución de probabilidades de marcadores | `engine03.py` |
+| [`04-Chaos-Index.md`](engine/04-Chaos-Index.md) | Índice de imprevisibilidad del partido | `engine04.py` |
+| [`05-Confidence.md`](engine/05-Confidence.md) | Nivel de confianza de la predicción | `engine05.py` |
+| [`06-Expected-Value.md`](engine/06-Expected-Value.md) | Valor esperado frente a las cuotas de mercado | `engine06.py` |
 
 ### models/ — Investigación y fundamento científico
 
@@ -103,6 +153,13 @@ Documenta el respaldo estadístico/matemático de cada componente del engine, si
 - [`confidence.md`](models/confidence.md)
 - [`offensive-strength.md`](models/offensive-strength.md)
 - [`defensive-strength.md`](models/defensive-strength.md)
+- [`chaos-index.md`](models/chaos-index.md)
+- [`parameter-calibration.md`](models/parameter-calibration.md) — catálogo de parámetros/pesos pendientes de calibración real
+- [`forma-reciente.md`](models/forma-reciente.md) — Variable001, ya implementada en `app/preparation/`
+- [`rendimiento-torneo.md`](models/rendimiento-torneo.md) — Variable002, ya implementada
+- [`profundidad-plantilla.md`](models/profundidad-plantilla.md) — Variable008 (componente Profundidad), ya implementada
+- [`fatiga.md`](models/fatiga.md) — Variable007 (alcance reducido), ya implementada
+- [`disponibilidad.md`](models/disponibilidad.md) — Variable006 (alcance reducido), ya implementada
 
 **Ningún motor puede incorporar fórmulas, variables o algoritmos nuevos sin una investigación previa documentada aquí.**
 
@@ -154,6 +211,8 @@ Cada agente tiene una única responsabilidad y termina con un "Juramento del Age
 7. Cuando el partido finalice, registrar el resultado en `data/results/`.
 8. Actualizar las métricas en `data/audit/`.
 
+En código, este mismo flujo (etapas 3-5) ya existe implementado como `PredictMatchUseCase → EnginePipeline → VariablePreparation → EngineRunner → Engine01…Engine06` (`app/application/`, `app/runtime/`, `app/preparation/`, `app/engine/`) — ver "Estado actual" para qué falta para que produzca una predicción real.
+
 ## Orden de lectura recomendado
 
 Antes de realizar cualquier modificación, revisar en este orden (detalle completo y justificación en `CLAUDE.md`, secciones "Orden de Lectura" y "Jerarquía Documental"):
@@ -163,7 +222,7 @@ Antes de realizar cualquier modificación, revisar en este orden (detalle comple
 3. `docs/22-Manual-Operativo-del-Arquitecto-IA.md` — protocolo de trabajo para toda misión de arquitectura.
 4. `docs/00-Project-Tracker.md` — estado real de cada misión.
 5. El resto de `docs/` relevante a la tarea, en orden numérico ascendente (regla que cubre automáticamente cualquier documento nuevo).
-6. `engine/`, `models/`, `data/`, según corresponda.
+6. `engine/`, `models/`, `app/`, `data/`, según corresponda.
 7. `CHANGELOG.md`.
 
 Si existe conflicto entre documentos, prevalece el de mayor prioridad según la Jerarquía Documental (`CLAUDE.md`).
@@ -180,15 +239,21 @@ Si existe conflicto entre documentos, prevalece el de mayor prioridad según la 
 - Toda modificación debe poder ser auditada.
 - Toda mejora debe registrarse en `CHANGELOG.md`.
 
-Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.md`](CLAUDE.md).
+Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.md`](CLAUDE.md). El principio de justificación de datos (todo campo de la Base de Conocimiento debe responder qué variable lo usa, si es derivable de otro dato ya existente, y si debe persistirse o calcularse en ejecución) está desarrollado en [`docs/05-Base-de-Conocimiento.md`](docs/05-Base-de-Conocimiento.md) — no se repite aquí.
 
 ---
 
 ## Estado actual
 
-Proyecto en desarrollo activo (**v1.0**). Estructura de `docs/`, `models/` y `.claude/agents/` ya operativa; `engine/` cuenta con un documento por motor (la separación formal en v1.0 Arquitectura / v2.0 Implementación matemática está pendiente); la mayor parte de `data/` contiene únicamente marcadores de posición, salvo [`data/processed/selecciones-nacionales/`](data/processed/selecciones-nacionales/README.md), que ya tiene datos reales (`selecciones.csv`, `competiciones.csv`). `scripts/` y `excel/` aún no se han creado.
+**Arquitectura:** completa en su eje de diseño. Los tres ejes — arquitectura del Engine (`docs/18` a `docs/23`), gobernanza documental y modelo de datos (`docs/31` a `docs/35`) — ya tienen una respuesta documentada de extremo a extremo. `app/` implementa esa arquitectura en Python: `PredictionContext`, `VariablePreparation`, los 6 motores del Engine, `EngineRunner`, `EnginePipeline`, `PredictMatchUseCase` y un primer endpoint HTTP ya existen como código real, no solo como especificación.
 
-El diseño arquitectónico del Engine y su gobernanza documental completó una fase de reconciliación (`docs/18` a `docs/23`: inventario de inconsistencias, auditoría independiente, jerarquía de gobernanza, Constitución del Modelo Santiago y Manual Operativo del Arquitecto IA) — la ejecución efectiva de esas correcciones sobre `engine/` y el resto de `docs/` sigue en curso. Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión, incluyendo el roadmap de reconciliación pendiente, se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
+**Variables Oficiales:** de las 9 activas en V1, **8 tienen cálculo real** (Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo, Solidez Defensiva, Disponibilidad de Plantilla y Fatiga en alcance reducido, Calidad de Plantilla en su componente Profundidad, Historial Directo) — solo Localía permanece bloqueada, y únicamente por un problema de esquema (`ValorVariable.valor` no admite todavía un valor de texto), no por falta de método ni de dato. Ver [`docs/17-Matriz-de-Consumo-de-Variables.md`](docs/17-Matriz-de-Consumo-de-Variables.md) y las investigaciones matemáticas en `models/` (`MODEL-009` a `MODEL-015`) — todas completadas, ninguna aprobada todavía por el Arquitecto Estadístico Humano (Constitución, Art. 5).
+
+**Base de Conocimiento (`data/processed/selecciones-nacionales/`):** de las 11 entidades del módulo, **5 ya tienen datos reales**: `selecciones.csv` (40 selecciones, Top 40 FIFA), `competiciones.csv` (11 competiciones), `estadios.csv` (32 estadios, uno por selección para 32 de las 40 ya catalogadas), `arbitros.csv` (51 de los 52 árbitros designados oficialmente por FIFA para el Mundial 2026) y `torneos.csv` (13 ediciones reales, incluidas las 5 eliminatorias mundialistas por confederación). Las 6 entidades restantes (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`) solo tienen el encabezado — en particular, `partidos.csv`/`estadisticas_partido.csv` siguen vacíos, que es la única razón por la que ninguna predicción real es posible todavía (Variable003/004, Nivel A, detienen el Engine sin ese dato). El orden oficial de captura y el Conjunto Mínimo Viable están definidos en [`docs/37-Estrategia-Poblacion-Base-Conocimiento.md`](docs/37-Estrategia-Poblacion-Base-Conocimiento.md); el protocolo de ingesta en [`docs/38-Protocolo-Oficial-Ingesta-Datos.md`](docs/38-Protocolo-Oficial-Ingesta-Datos.md).
+
+**`scripts/` y `tests/`:** ambos existen como directorios bootstrap (sin script ni caso de prueba real todavía). `excel/` aún no se ha creado.
+
+Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión — incluidas las series `MS-`, `MR-`, `AR-`, `GR-`, `GOV-`, `DEV-`, `DATA-`, `IMP-`, `MAP-`, `MODEL-`, `BUILD-` e `INT-` — se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
 
 ## Licencia
 
@@ -201,31 +266,3 @@ Consultar [`docs/12-Roadmap.md`](docs/12-Roadmap.md) para la hoja de ruta.
 ## Objetivo
 
 Construir el sistema probabilístico de predicción deportiva más consistente, transparente y mantenible posible, priorizando siempre la calidad del modelo sobre la velocidad de desarrollo.
-
-
-# Principio de Justificación de Datos
-
-Todo dato almacenado dentro de la Base de Conocimiento deberá justificar su existencia.
-
-Antes de incorporar un nuevo campo o una nueva entidad, deberá responderse obligatoriamente las siguientes preguntas:
-
-1. ¿Qué variable(s) del Modelo Santiago utilizan este dato?
-2. ¿Cómo mejora la precisión de las predicciones?
-3. ¿Puede obtenerse a partir de otro dato ya existente?
-4. ¿Es información permanente o información temporal?
-5. ¿Pertenece realmente a la Base de Conocimiento o debe calcularse durante la ejecución del modelo?
-
-Si un dato no aporta valor directo o indirecto al cálculo de probabilidades, no deberá formar parte de la versión 1.0.
-
-El objetivo del Modelo Santiago no es construir una base de datos completa de fútbol.
-
-El objetivo es almacenar únicamente la información necesaria para maximizar la calidad de las predicciones.
-
-Se priorizarán:
-
-- Calidad sobre cantidad.
-- Información útil sobre información interesante.
-- Datos necesarios sobre datos decorativos.
-- Simplicidad sobre complejidad.
-
-Todo campo deberá tener una razón de existir.
