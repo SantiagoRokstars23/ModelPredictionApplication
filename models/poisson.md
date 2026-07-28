@@ -2,11 +2,11 @@
 
 **Archivo:** `models/poisson.md`
 
-**Misión:** MODEL-003 — Modelo Matemático de Poisson (fundacional) / MODEL-007 — Calibración Matemática del Modelo de Poisson (orden de aplicación, restricciones matemáticas, ejemplo simbólico completo)
+**Misión:** MODEL-003 — Modelo Matemático de Poisson (fundacional) / MODEL-007 — Calibración Matemática del Modelo de Poisson (orden de aplicación, restricciones matemáticas, ejemplo simbólico completo) / MODEL-019 — Investigación del ajuste Dixon-Coles para la corrección del sesgo de empates (sección 16)
 
-**Versión:** 2.1.0-investigación
+**Versión:** 2.2.0-investigación
 
-**Estado:** Investigación — estructura matemática completa; parámetros (`μ_gol`, `κ`, `κ'`, `λ_min`, `λ_max`) **pendientes de calibración estadística**, conforme a `CLAUDE.md`
+**Estado:** Investigación — estructura matemática completa; parámetros (`μ_gol`, `κ`, `κ'`, `λ_min`, `λ_max`) **pendientes de calibración estadística**, conforme a `CLAUDE.md`. `MODEL-019` investiga (sin implementar) si Dixon-Coles resuelve el sesgo de empates ya medido por `VALID-001`/`VALID-003`/`ANL-001`/`CAL-004` — recomendación: **C) investigar además la magnitud de separación de `λ` antes de migrar** (sección 16.10).
 
 ---
 
@@ -158,8 +158,11 @@ Es el núcleo probabilístico del sistema: recibe las salidas de `engine/01`/`02
 # 14. Referencias
 
 - Maher, M.J. (1982). "Modelling Association Football Scores." *Statistica Neerlandica*, 36(3), 109-118.
-- Dixon, M.J. y Coles, S.G. (1997). "Modelling Association Football Scores and Inefficiencies in the Football Betting Market." *Journal of the Royal Statistical Society: Series C (Applied Statistics)*, 46(2), 265-280.
+- Dixon, M.J. y Coles, S.G. (1997). "Modelling Association Football Scores and Inefficiencies in the Football Betting Market." *Journal of the Royal Statistical Society: Series C (Applied Statistics)*, 46(2), 265-280. 525 citas (Semantic Scholar) — verificado en `MODEL-019`.
+- Karlis, D. y Ntzoufras, I. (2003). "Analysis of sports data by using bivariate Poisson models." *Journal of the Royal Statistical Society: Series D (The Statistician)*, 52(3), 381-393 — origen del modelo Bivariate Poisson y de la aproximación por distribución de Skellam para la diferencia de goles, ambos comparados en `MODEL-019` §16.9.
+- `pena.lt`/`penaltyblog` (2025). "Football Prediction Models: Which Ones Work the Best?" — comparación empírica por *Ranked Probability Score* (Poisson, Dixon-Coles, Bivariate Poisson, Zero-Inflated Poisson, Binomial Negativa, Weibull) sobre datos reales de la Eredivisie 2023-24, usada como evidencia cuantitativa central en `MODEL-019` §16.5/16.9.
 - `models/offensive-strength.md` y `models/defensive-strength.md` (`MODEL-001`, `MODEL-002`) — fuente de `FO`/`FD`, entradas directas de esta fórmula.
+- `models/estabilizacion-muestras-pequenas.md` (`MODEL-017`/`MODEL-018`) — Shrinkage de Variable003/004, cuya interacción con la eficacia de Dixon-Coles se analiza en `MODEL-019` §16.7.
 
 ---
 
@@ -168,9 +171,133 @@ Es el núcleo probabilístico del sistema: recibe las salidas de `engine/01`/`02
 Pendiente, condicionado a datos reales suficientes en `data/results/`:
 
 - Calibración de `μ_gol` (dinámico por competición), `κ`, `κ'`.
-- Evaluación de si incorporar la corrección de Dixon-Coles (`τ`/`ρ`) mejora la capacidad predictiva en marcadores bajos, una vez exista suficiente historial para estimar `ρ` de forma confiable.
+- ~~Evaluación de si incorporar la corrección de Dixon-Coles (`τ`/`ρ`) mejora la capacidad predictiva en marcadores bajos~~ — investigado en `MODEL-019` (sección 16): recomendación **C) investigar además la magnitud de separación de `λ`** antes de migrar, no una migración directa. La calibración de `ρ` (si una futura misión de implementación lo justifica) sigue condicionada a que exista suficiente historial real, mismo motivo ya señalado aquí.
 - Validación empírica de la elección de truncar la matriz en 6 goles (sección 8) contra la distribución real observada.
 - Definición formal, en `docs/28`, de "Goles Esperados" como Variable Derivada de Categoría D con fórmula ya definida (actualización pendiente, fuera de esta misión).
+
+---
+
+# 16. Investigación del ajuste Dixon-Coles para la corrección del sesgo de empates (`MODEL-019`)
+
+**Origen:** `VALID-001`, `VALID-003`, `ANL-001` y `CAL-004` midieron, de forma independiente y con muestras crecientes (`N=8` → `N=16` → `N=35`), el mismo sesgo: el Modelo Santiago **nunca predice un empate como resultado más probable** (recall de empates = 0% en las tres muestras), con la brecha entre probabilidad de empate asignada y frecuencia real de empates creciendo hasta 17.5 puntos porcentuales en `VALID-003` (22.5% asignado vs. 40.0% real, la muestra más grande y más reciente). Esta misión investiga, sin implementar nada, si el ajuste Dixon-Coles es la solución matemáticamente más adecuada.
+
+## 16.1 Problema original: por qué el Poisson independiente subestima empates
+
+El diseño vigente (`Engine03`, sección 6-8 de este documento) modela `goles_local` y `goles_visitante` como dos variables Poisson **independientes** — la probabilidad conjunta de cualquier marcador `(x,y)` es, simplemente, el producto `P(X=x)·P(Y=y)`. Esta independencia es una simplificación matemática conveniente (permite construir la matriz completa a partir de dos distribuciones marginales, sección 8), pero **no es realista**: en un partido real, ambos equipos ajustan su comportamiento táctico en función del marcador y del comportamiento del rival — cuando el resultado está 0-0 o 1-1, ambos equipos tienden a jugar de forma más conservadora (ninguno quiere arriesgar perdiendo lo que ya tiene), lo que hace que estos marcadores se sostengan con una frecuencia real mayor a la que predice el producto simple de dos Poisson independientes. Dixon y Coles (1997) documentaron esto empíricamente contra datos reales de la liga inglesa: la Poisson independiente subestima sistemáticamente **exactamente 4 marcadores** — `0-0`, `1-0`, `0-1` y `1-1` — y ningún otro. La razón de que sean justo estos 4 y no otros: son los únicos marcadores donde **ambos** equipos anotan como máximo 1 gol — la región donde la dependencia táctica descrita arriba tiene el efecto proporcionalmente más grande sobre la probabilidad conjunta (en marcadores altos, con más goles ya anotados por ambos lados, cualquier dependencia residual queda diluida entre muchas más combinaciones posibles).
+
+**Evidencia directa dentro del propio proyecto, no solo bibliográfica:** `VALID-003` (`docs/00-Project-Tracker.md`) ya mostró la misma firma exacta sobre datos reales del Modelo Santiago — de los marcadores reales de la muestra de 35 partidos, `1-1` ocurrió 8 veces pero el modelo solo lo predijo como más probable 5 veces; `0-0` ocurrió 4 veces, predicho solo 1 vez — mientras que el modelo **sobre-predice** sistemáticamente `1-0` (13 veces predicho vs. 3 reales) y `0-1` (8 predicho vs. 3 reales). Esto es consistente con el diagnóstico Dixon-Coles, pero con un matiz importante desarrollado en la sección 16.9: la sobre-predicción de `1-0`/`0-1` (no solo la sub-predicción de `0-0`/`1-1`) sugiere que el problema no es únicamente de correlación en marcadores bajos, sino también de **cuán separados están `λ_local` y `λ_visitante`** entre sí (ver `ANL-001`, ya citado en el brief de esta misión).
+
+## 16.2 El modelo Dixon-Coles: origen, objetivo, fundamento, cuándo y por qué
+
+**Origen:** Mark Dixon y Stuart Coles, "Modelling Association Football Scores and Inefficiencies in the Football Betting Market", *Journal of the Royal Statistical Society: Series C (Applied Statistics)*, 1997 — 525 citas registradas en Semantic Scholar, uno de los papers más influyentes de modelado estadístico de fútbol.
+
+**Objetivo declarado por los autores:** mejorar el modelo de Maher (1982) — que ya usaba dos Poisson independientes con parámetros de ataque/defensa multiplicativos por equipo, exactamente la arquitectura que el Modelo Santiago adoptó desde `MODEL-001`/`MODEL-002` (sección 5 de este documento) — corrigiendo su tendencia sistemática a predecir mal la frecuencia real de marcadores bajos, y además detectar ineficiencias explotables en las casas de apuestas de la época.
+
+**Fundamento matemático:** en vez de reemplazar la Poisson independiente por completo (lo que exigiría un modelo bivariado con muchos más parámetros, sección 16.9), Dixon-Coles **preserva la estructura Poisson-independiente para todo el resto de la matriz** y multiplica únicamente las 4 celdas ya identificadas por un factor de corrección `τ(x,y;λ,μ,ρ)`:
+
+```
+τ(0,0) = 1 − λ·μ·ρ
+τ(0,1) = 1 + λ·ρ
+τ(1,0) = 1 + μ·ρ
+τ(1,1) = 1 − ρ
+τ(x,y) = 1   para cualquier otro (x,y)
+```
+
+donde `λ`=`λ_local`, `μ`=`λ_visitante` (usando la notación original del paper) y `ρ` es el único parámetro nuevo (sección 16.4). La probabilidad conjunta corregida es `P(x,y) = τ(x,y) · Poisson(x;λ) · Poisson(y;μ)`.
+
+**Cuándo apareció:** 1997, en respuesta directa a la limitación ya conocida del modelo de Maher (1982) de 15 años antes.
+
+**Por qué fue creado:** los propios autores señalan que la Poisson independiente, pese a ser razonablemente precisa en general, fallaba de forma **predecible y explotable** específicamente en marcadores bajos — suficiente para generar apuestas de valor esperado positivo contra las casas de apuestas que usaban modelos más simples en esa época, motivación original y explícita del paper (su segundo título, "...Inefficiencies in the Football Betting Market", lo confirma).
+
+## 16.3 Diferencias matemáticas frente al Poisson clásico
+
+| | Poisson independiente (vigente en `Engine03`) | Dixon-Coles |
+|---|---|---|
+| Marginales de `goles_local`/`goles_visitante` | Poisson(`λ_local`), Poisson(`λ_visitante`) | **Idénticas, sin cambio** |
+| Probabilidad conjunta, marcadores altos (`x≥2` o `y≥2`) | Producto simple | **Idéntica, sin cambio** (`τ=1`) |
+| Probabilidad conjunta en `{0-0, 1-0, 0-1, 1-1}` | Producto simple | Producto simple **× `τ(x,y;ρ)`** |
+| Parámetros nuevos | Ninguno | **`ρ`** (un único escalar, compartido por todo el histórico, no por partido) |
+| Normalización | Ya suma 1 automáticamente (marginales normalizadas) | Requiere **renormalizar** la matriz completa tras aplicar `τ` (la corrección redistribuye masa de probabilidad, no la crea; sin renormalizar, la suma de la matriz ya no es exactamente 1 — desviación pequeña pero no nula, documentada explícitamente por los propios autores) |
+
+**Qué cambia:** únicamente 4 celdas de la matriz completa (`(MAX_GOLES+2)²` = 64 celdas en la implementación actual del Modelo Santiago, sección 8). El resto de la matriz —incluyendo toda la "cola" que ya modela `CELDA_COLA` (sección 8)— permanece exactamente igual.
+**Qué permanece igual:** el cálculo de `λ_local`/`λ_visitante` (sección 6, Fuerza Ofensiva/Defensiva × `μ_gol` × Ajuste de Localía) — Dixon-Coles no toca en absoluto cómo se estima `λ`, solo cómo se combina la probabilidad conjunta a partir de `λ` ya calculado.
+**Nuevo parámetro:** `ρ` (sección 16.4).
+**Por qué modifica únicamente marcadores bajos:** es una decisión de diseño explícita de los propios autores, no una limitación accidental — Dixon y Coles probaron empíricamente que la desviación entre el modelo independiente y los datos reales se concentraba, de forma estadísticamente significativa, solo en esas 4 celdas; extender la corrección a más celdas no mejoraba el ajuste y sí añadía complejidad injustificada (mismo principio, aplicado 20 años antes, que `CLAUDE.md` exige hoy: "si una mejora aumenta la complejidad sin mejorar el modelo, deberá descartarse").
+
+## 16.4 El parámetro `ρ`
+
+**Significado/interpretación:** mide la **desviación de la independencia** entre los goles de ambos equipos, exclusivamente en marcadores bajos. `ρ=0` reduce el modelo exactamente al Poisson independiente ya vigente (los 4 factores `τ` se vuelven `1`) — Dixon-Coles es, matemáticamente, una **generalización estricta** del modelo actual, no un reemplazo incompatible.
+
+**Rango habitual:** típicamente entre `-0.1` y `-0.2` en ligas europeas de élite; el valor original estimado por Dixon y Coles sobre datos de la liga inglesa de los años 90 fue `ρ=-0.13`, cifra que se sigue citando como valor de referencia por defecto en implementaciones posteriores.
+
+**Signo:** un `ρ` **negativo** (el caso empíricamente observado siempre) implica que los marcadores bajos ocurren **con más frecuencia** que la predicha por independencia total — consistente con la intuición táctica de la sección 16.1 (cautela mutua en el marcador ajustado).
+
+**Cómo se estima normalmente:** por máxima verosimilitud, junto con (no por separado de) los parámetros de ataque/defensa de cada equipo y el factor de ventaja de local — es decir, `ρ` no se calibra de forma aislada; se ajusta simultáneamente con todo el resto del modelo sobre un historial amplio de resultados reales (temporadas completas, no partidos individuales). Dixon y Coles propusieron además una variante de "máxima verosimilitud ponderada" (dar más peso a partidos recientes que a partidos antiguos del mismo histórico) para que `ρ` refleje el estado actual de una liga, no un promedio histórico completo.
+
+**Efecto cuando `ρ` aumenta (se acerca a 0) o disminuye (más negativo):** cuanto más negativo, mayor la corrección — `τ(1,1)=1-ρ` crece por encima de 1 (más probabilidad para el empate 1-1), mientras `τ(0,1)`/`τ(1,0)` decrecen levemente por debajo de 1 (menos probabilidad para las victorias mínimas 1-0/0-1) y `τ(0,0)` se ajusta según el producto `λ·μ` (efecto pequeño cuando ambos `λ` son bajos, mayor cuando son moderados). En el límite `ρ→0`, el modelo colapsa exactamente al Poisson independiente ya vigente.
+
+**Limitación cuantitativa importante para esta investigación (no reportada explícitamente en ninguna fuente consultada, derivada aquí mediante cálculo directo):** el efecto de `τ` está **acotado** — con `ρ=-0.13` (valor de referencia), `τ(1,1)=1.13` (aumento del 13% sobre la probabilidad de 1-1, sin importar cuán separados estén `λ_local`/`λ_visitante`) y `τ(0,0)` depende del producto `λ·μ`, típicamente entre `1.03` y `1.10` para valores de `λ` moderados. Esto significa que Dixon-Coles **nunca puede, por sí solo, revertir un sesgo de la magnitud ya medida por `VALID-003`** (17.5 puntos porcentuales) si la causa dominante es que `λ_local` y `λ_visitante` están, de entrada, muy separados entre sí — un ajuste porcentual acotado (13% sobre una celda, menos sobre otra) no puede compensar una separación de `λ` arbitrariamente grande. Esta observación es central para la recomendación de la sección 16.10.
+
+## 16.5 Evidencia científica
+
+**Volumen de literatura:** el paper original tiene 525 citas (Semantic Scholar) — un volumen alto para un paper de estadística aplicada al deporte, confirmando que no es una técnica marginal ni experimental. Existen extensiones publicadas en revistas revisadas por pares hasta la actualidad, incluyendo una extensión reciente a fútbol femenino publicada en *Journal of the Royal Statistical Society Series C* (2023/2024) — evidencia de que el modelo sigue siendo objeto de investigación activa, no una técnica abandonada.
+
+**Qué mejoras reportan / qué métricas mejora:** una comparación empírica independiente y reciente (blog técnico `pena.lt`, autor del paquete Python `penaltyblog`, especializado en modelado de fútbol) sobre datos reales de la Eredivisie holandesa 2023-2024, usando *Ranked Probability Score* (RPS — métrica estándar para evaluar predicciones ordinales L/E/V, más apropiada que Accuracy simple porque penaliza según la distancia entre la predicción y el resultado real) reportó: Dixon-Coles **0.1914**, empatado en primer lugar con un modelo de conteo Weibull, frente a Poisson simple **0.1915**, Zero-Inflated Poisson **0.1915**, Binomial Negativa **0.1916** y Bivariate Poisson **0.1916** (el peor de los seis). **Hallazgo honesto, no favorable a una recomendación entusiasta:** la mejora medida (0.1915→0.1914) es **mínima en términos absolutos** — del orden de una parte en 2000 — mucho menor de lo que la brecha de 17.5 puntos porcentuales ya medida en `VALID-003` haría desear. El mismo estudio encontró que el **ajuste temporal** (ponderar partidos recientes más que antiguos, técnica original también de Dixon-Coles 1997) aporta una mejora adicional mayor (RPS≈0.189) que la propia corrección `τ`/`ρ` por sí sola — sugiriendo que, en la práctica moderna, el valor de "Dixon-Coles" como paquete se debe más a su componente de ponderación temporal que a la corrección de marcadores bajos en sí misma.
+
+**Limitaciones documentadas en la literatura:** (1) el modelo sigue asumiendo una tasa de gol constante durante los 90 minutos (no captura una expulsión o un cambio táctico a mitad de partido — misma limitación ya heredada del Poisson simple, sección 4 de este documento); (2) la corrección `τ` es válida solo para las 4 celdas explícitamente identificadas — no generaliza a otros posibles sesgos de correlación en otras zonas de la matriz; (3) estimar `ρ` de forma confiable requiere un historial amplio (típicamente varias temporadas completas de una liga) — con muestras pequeñas, la estimación de máxima verosimilitud de `ρ` es inestable (mismo tipo de problema de muestra pequeña ya documentado extensamente en `CAL-004`/`MODEL-017`/`MODEL-018` para Variable003/004, aplicado aquí a un parámetro distinto).
+
+## 16.6 Uso en modelos deportivos modernos
+
+**Casas de apuestas:** servicios de modelado de cuotas documentados públicamente combinan explícitamente un modelo Dixon-Coles con las cuotas de las principales casas minoristas del Reino Unido (Sky Bet, Bet365, Ladbrokes, Coral, Paddy Power, William Hill) como mecanismo de contraste/blending — evidencia de que sigue siendo, hoy, una referencia práctica en la industria, no solo académica.
+
+**Modelos académicos:** además del paper original, existen extensiones publicadas en revistas revisadas por pares (ej. la ya citada extensión a fútbol femenino) y comparaciones sistemáticas contra alternativas más recientes (Bivariate Poisson, Zero-Inflated Poisson, modelos de conteo Weibull) en trabajos de 2024-2025 — el modelo se sigue usando como punto de referencia (*baseline*) obligado en cualquier paper nuevo de predicción de marcadores de fútbol.
+
+**Proyectos open source / GitHub / Kaggle / blogs técnicos:** múltiples implementaciones públicas confirmadas, incluyendo el paquete `penaltyblog` (Python, publicado en PyPI, con implementación optimizada en Cython específicamente para Dixon-Coles), al menos 3 repositorios de GitHub dedicados exclusivamente a implementar este modelo, y varios blogs técnicos reconocidos en la comunidad de análisis de fútbol (`dashee87.github.io`, `opisthokonta.net`) con tutoriales completos paso a paso — confirma adopción amplia y práctica, no solo teórica.
+
+## 16.7 Compatibilidad con el Modelo Santiago
+
+**Variable001/Variable002:** sin ningún impacto — estas Variables alimentan `M_forma` dentro de `Engine01`/`Engine02` (Fuerza Ofensiva/Defensiva), un paso completamente anterior y externo a donde Dixon-Coles operaría (`_construir_matriz_conjunta` en `Engine03`, después de que `λ_local`/`λ_visitante` ya están calculados). Compatible sin fricción.
+
+**Variable003/Variable004:** sin ningún impacto directo — alimentan `Engine01`/`Engine02` de la misma forma. **Relación indirecta importante, ya señalada en la sección 16.4:** la magnitud de separación entre `λ_local` y `λ_visitante` que Dixon-Coles no puede compensar depende, en última instancia, de qué tan extremos sean los valores de Variable003/004 — por lo que el Shrinkage recién implementado (siguiente punto) sí interactúa indirectamente con la eficacia de una futura corrección Dixon-Coles.
+
+**Shrinkage (`IMP-002`/`MODEL-018`):** **totalmente compatible y, de hecho, complementario** — el Shrinkage ya redujo el rango observado de Variable003/004 (`VALID-003`: rango 21.94-88.81 y 18.35-78.19, frente al 3.02-96.47/2.06-87.80 medido por `CAL-004` antes del Shrinkage), lo que **reduce la separación típica entre `λ_local` y `λ_visitante`** — precisamente la condición bajo la cual Dixon-Coles es más efectivo (sección 16.4: su corrección acotada compensa mejor separaciones moderadas que separaciones extremas). Ambos mecanismos atacan el mismo síntoma (sesgo de empates) desde ángulos distintos y no conflictivos: Shrinkage reduce la causa raíz (separación excesiva de `λ`, diagnóstico de `ANL-001`), Dixon-Coles corrige el síntoma residual en el nivel de la matriz de probabilidad conjunta.
+
+**Engine05 (Confianza):** consume `probabilidad_local`/`probabilidad_empate`/`probabilidad_visitante` ya calculados por `Engine03` — Dixon-Coles seguiría produciendo exactamente esas 3 cifras (solo con valores distintos, más precisos), sin cambiar la interfaz que `Engine05` ya espera. Compatible sin cambios en `Engine05`.
+
+**Engine06 (Expected Value):** consume las probabilidades de `Engine03` para contrastarlas contra cuotas de mercado (`cuotas.csv`) — mismo razonamiento que `Engine05`: la interfaz no cambia, solo la precisión de los valores que la alimentan. Compatible sin cambios en `Engine06`.
+
+**Conclusión de compatibilidad:** Dixon-Coles es arquitectónicamente compatible con el 100% de los componentes ya vigentes del Modelo Santiago, sin romper ninguna interfaz existente — el único punto de inserción necesario es dentro de `Engine03._construir_matriz_conjunta` (o una función equivalente nueva), aislado del resto del pipeline.
+
+## 16.8 Complejidad de implementación
+
+**Dificultad:** baja-media. La fórmula de `τ` (sección 16.2) es aritmética simple (4 líneas de código), aplicable directamente sobre la matriz ya construida por el mecanismo actual (sección 8) — no exige rediseñar la construcción de la matriz, solo insertar un paso de corrección + renormalización antes de extraer `probabilidad_local`/`empate`/`visitante`/`top_marcadores`.
+
+**Archivos afectados (estimado, no ejecutado en esta misión):** únicamente `app/engine/engine03.py` — ningún otro archivo de `app/` necesitaría cambios, dado que la interfaz de salida (`Engine03Salida`) no cambiaría de forma.
+
+**Riesgo:** bajo en términos de romper funcionalidad ya existente (es una generalización estricta, `ρ=0` reproduce el comportamiento actual exactamente) — el riesgo real está concentrado enteramente en **la elección del valor de `ρ`** sin evidencia estadística suficiente propia del proyecto (mismo tipo de riesgo ya gestionado con cautela en `CAL-002`/`MODEL-018` para otros parámetros: `KAPPA_LOCAL`/`KAPPA_VISITANTE`, `k` del Shrinkage). Usar el valor de referencia de la literatura (`ρ≈-0.13`) sin verificarlo contra datos reales del Modelo Santiago violaría directamente "nunca alterar pesos sin evidencia estadística" (`CLAUDE.md`).
+
+**Impacto esperado:** limitado y acotado (sección 16.4/16.5) — mejora real pero modesta en la probabilidad de empate para marcadores específicos (0-0, 1-1), sin garantía de cerrar por sí solo la brecha de 17.5 puntos porcentuales ya medida.
+
+**Compatibilidad hacia atrás:** total — con `ρ=0` el comportamiento es idéntico al actual; cualquier valor de `ρ` distinto de 0 es, matemáticamente, una extensión aditiva, nunca una sustitución incompatible.
+
+## 16.9 Comparación con alternativas
+
+| Alternativa | Qué corrige | Parámetros nuevos | Evidencia empírica (RPS, `pena.lt` 2023-24 Eredivisie) | Compatibilidad con la arquitectura actual |
+|---|---|---|---|---|
+| **Poisson independiente** (vigente) | — (baseline) | 0 | 0.1915 | — |
+| **Dixon-Coles** | 4 celdas de marcador bajo (`0-0`,`1-0`,`0-1`,`1-1`) | 1 (`ρ`) | **0.1914** (mejor, empatado con Weibull) | Alta — inserción aislada en `Engine03` |
+| **Bivariate Poisson** (Karlis-Ntzoufras) | Correlación entre **todos** los marcadores, no solo los bajos, vía un tercer componente Poisson compartido | 1-2 (parámetro de covarianza, más el parámetro de forma) | 0.1916 (el **peor** de los 6 modelos comparados en ese estudio) | Media — exige rediseñar la construcción de la matriz conjunta (ya no es un producto de 2 marginales) |
+| **Zero-Inflated Poisson (ZIP)** | Exceso específico de **ceros** (equipos que no anotan ningún gol), vía un proceso de mezcla | 1-2 por equipo (probabilidad de "inflación" de cero) | 0.1915 (empatado con Poisson simple — sin mejora medible en ese estudio) | Media — requiere una estructura de mezcla distinta a la matriz Poisson simple |
+| **Skellam** (Karlis-Ntzoufras 2003, vía diferencia de goles) | Modela directamente la **diferencia** de goles (L/E/V), evitando la necesidad de una corrección de correlación explícita | 0 adicionales sobre el enfoque bivariado subyacente | No evaluado en el mismo estudio (métrica RPS no aplica igual al no producir marcador exacto) | **Baja** — no produce una distribución de marcadores exactos; el Modelo Santiago necesita `top_marcadores`/Over-Under/BTTS (`VALID-003`), que exigen conocer el marcador completo, no solo la diferencia |
+| **Elo + goles esperados** | Fuerza relativa vía un sistema de rating recursivo, no un modelo de marcador exacto | Requiere K-factor, `μ`/`σ` de incertidumbre inicial (ver `MODEL-018` §10, Opción D, ya evaluada allí para Variable003/004, mismo tipo de mecanismo) | No comparable directamente (paradigma distinto, no produce marcadores) | **Muy baja** — exigiría rediseñar `Engine01`-`Engine03` por completo, reemplazando Fuerza Ofensiva/Defensiva por un sistema de rating recursivo |
+
+**¿Por qué elegir uno sobre otro?** Bivariate Poisson y ZIP fueron, en la única comparación empírica reciente encontrada, **iguales o peores** que el Poisson simple ya vigente — no hay evidencia que justifique su mayor complejidad para el caso general. Skellam y Elo+xG quedan descartados por incompatibilidad estructural con requisitos ya vigentes del Modelo Santiago (marcador exacto completo, no solo signo del resultado). Dixon-Coles es, de las 5 alternativas comparadas, la única que (a) mejora medible aunque modestamente sobre el baseline en la única evidencia empírica encontrada, (b) requiere el menor número de parámetros nuevos (uno), y (c) es arquitectónicamente compatible sin rediseñar nada ya vigente.
+
+## 16.10 Recomendación oficial
+
+**C) Investigar además la magnitud de separación de `λ_local`/`λ_visitante` antes de migrar a Dixon-Coles.**
+
+**Justificación completa:** Dixon-Coles es, de las alternativas comparadas, la técnica correcta en principio — bien evidenciada (525 citas, uso activo en la industria y la academia), de bajo riesgo arquitectónico (generalización estricta del modelo actual, compatible con el 100% de los componentes ya vigentes, incluido el Shrinkage recién implementado), y de implementación acotada a un único archivo. **No se recomienda, sin embargo, migrar directamente (opción B)** por una razón cuantitativa específica desarrollada en esta misión (sección 16.4/16.5), no por duda genérica: la corrección `τ` está matemáticamente **acotada** a un ajuste porcentual fijo sobre 4 celdas (típicamente 7%-15% con el valor de referencia `ρ≈-0.13`), mientras que la brecha ya medida por `VALID-003` es de **17.5 puntos porcentuales** en la probabilidad de empate — una magnitud que un ajuste acotado, por diseño, no puede garantizar cerrar por sí solo, especialmente si (como sugiere `ANL-001`, ya citado en el brief de esta misión) la causa dominante del sesgo es que `λ_local` y `λ_visitante` llegan **demasiado separados** a la etapa de Poisson, no solo que la etapa de Poisson asuma independencia. La propia evidencia empírica externa más reciente encontrada (comparación RPS en Eredivisie 2023-24) refuerza esta cautela: la mejora medida de Dixon-Coles sobre Poisson simple fue mínima (0.1915→0.1914) cuando se aplicó de forma aislada, sin ponderación temporal adicional. **Tampoco se recomienda descartar Dixon-Coles (relegarlo a opción A, mantener Poisson sin más)** — es una mejora real, de bajo riesgo, y corrige exactamente el patrón de sesgo (sub-predicción de `0-0`/`1-1`, sobre-predicción de `1-0`/`0-1`) que `VALID-003` ya documentó con evidencia directa del propio proyecto. La recomendación C reconoce ambos hechos a la vez: Dixon-Coles probablemente forme parte de la solución final, pero implementarlo aislado, sin antes entender cuánto del sesgo total es atribuible a la separación de `λ` (un problema distinto, ya señalado por `ANL-001`, y no resuelto por `τ`/`ρ`), arriesga declarar "resuelto" un problema que en realidad solo se atenuó parcialmente — contrario al principio de "toda conclusión respaldada por evidencia" (`CLAUDE.md`).
 
 ---
 
