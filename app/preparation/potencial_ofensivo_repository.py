@@ -91,6 +91,17 @@ class PotencialOfensivoRepositoryProtocol(Protocol):
         """
         ...
 
+    def listar_selecciones(self, competicion: str) -> list[str]:
+        """IMP-001 (`MODEL-018`): lista de `id_seleccion` con al menos una
+        fila real en `estadisticas_partido.csv` dentro de esta competición --
+        insumo para calcular `Z*_competición` (media histórica del z-score
+        estandarizado), nunca para calcular `Z`/`Φ`/`P` (responsabilidad de
+        `VariablePreparation`, ver docstring del módulo). Devuelve `[]` si la
+        competición no se reconoce -- mismo criterio que `obtener_metricas_
+        ofensivas`.
+        """
+        ...
+
 
 class CsvPotencialOfensivoRepository:
     """Lee `estadisticas_partido.csv`, `partidos.csv`, `torneos.csv` y
@@ -159,6 +170,35 @@ class CsvPotencialOfensivoRepository:
         poblacion = [m for m in poblacion_todas if fecha_min <= m.fecha <= fecha_max]
 
         return MetricasOfensivas(equipo=equipo_reciente, poblacion_competicion=poblacion)
+
+    def listar_selecciones(self, competicion: str) -> list[str]:
+        id_competicion = self._resolver_id_competicion(competicion)
+        if id_competicion is None:
+            return []
+
+        ids_torneo = self._torneos_de_competicion(id_competicion)
+        if not ids_torneo:
+            return []
+
+        fechas_por_partido = self._indice_partidos_validos(ids_torneo)
+        if not fechas_por_partido:
+            return []
+
+        selecciones: set[str] = set()
+        for fila in self._leer_csv(_ARCHIVO_ESTADISTICAS):
+            try:
+                id_partido = fila["id_partido"]
+                id_seleccion = fila["id_seleccion"]
+            except KeyError as exc:
+                raise DatosPotencialOfensivoInconsistentes(
+                    f"'{_ARCHIVO_ESTADISTICAS}' no tiene la columna esperada: {exc}."
+                ) from exc
+
+            if id_partido not in fechas_por_partido:
+                continue  # partido fuera de la competición solicitada, o no válido
+            selecciones.add(id_seleccion)
+
+        return sorted(selecciones)
 
     # -- Resolución de competición (mismo patrón que mu_gol_provider.py) -----
 

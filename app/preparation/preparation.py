@@ -596,6 +596,28 @@ uniformemente en la dirección "más alto = peor defensa" antes de construir
 `Z_def`.
 """
 
+# -- Shrinkage de Variable003/004 -- ecuación oficial aprobada por MODEL-018,
+# implementada literalmente por IMP-001. Aplica por igual a Potencial
+# Ofensivo y Solidez Defensiva (mismo mecanismo de z-score/Φ en ambas).
+
+K_SHRINKAGE_VARIABLE003_004 = 5
+"""`k`, MODEL-018 §11-12 -- constante estructural documentada, **no
+calibrada, no configurable** (primera implementación, IMP-001). Representa
+el "punto de estabilización": el `N` en el que la evidencia propia del
+equipo y la media histórica de la competición pesan exactamente igual
+(`w(k)=0.5`). Valor `5` elegido por ser la mitad de `VENTANA_PARTIDOS_
+POTENCIAL_OFENSIVO`/`VENTANA_PARTIDOS_SOLIDEZ_DEFENSIVA` (N=10, ventana ya
+vigente) -- no una calibración estadística; una futura misión de
+calibración podría ajustarlo con más volumen de datos (MODEL-018 §11,
+rango sugerido `k∈[5,8]`).
+"""
+
+
+def _peso_shrinkage(n: int, k: float = K_SHRINKAGE_VARIABLE003_004) -> float:
+    """`w(N) = N/(N+k)` -- MODEL-018 §12, ecuación oficial (Opción A)."""
+    return n / (n + k)
+
+
 _ARCHIVO_ESTADISTICAS_DEFENSIVAS = "estadisticas_partido.csv"
 _ARCHIVO_PARTIDOS_DEFENSIVOS = "partidos.csv"
 _ARCHIVO_TORNEOS_DEFENSIVOS = "torneos.csv"
@@ -645,6 +667,13 @@ class _SolidezDefensivaRepositoryProtocol(Protocol):
         pero el equipo no tiene partidos válidos -- nunca debe inventar un
         partido.
         """
+        ...
+
+    def listar_selecciones(self, competicion: str) -> list[str]:
+        """IMP-001 (`MODEL-018`): lista de `id_seleccion` con al menos una
+        fila real en `estadisticas_partido.csv` dentro de esta competición --
+        mismo propósito y mismo criterio que `PotencialOfensivoRepository
+        Protocol.listar_selecciones`, para Variable004."""
         ...
 
 
@@ -729,6 +758,29 @@ class _SolidezDefensivaRepository:
         poblacion = [m for m in poblacion_todas if fecha_min <= m.fecha <= fecha_max]
 
         return _MetricasSolidezDefensiva(equipo=equipo_reciente, poblacion_competicion=poblacion)
+
+    def listar_selecciones(self, competicion: str) -> list[str]:
+        id_competicion = self._resolver_id_competicion(competicion)
+        if id_competicion is None:
+            return []
+
+        ids_torneo = self._torneos_de_competicion(id_competicion)
+        if not ids_torneo:
+            return []
+
+        partidos = self._indice_partidos_validos(ids_torneo)
+        if not partidos:
+            return []
+
+        estadisticas = self._indice_estadisticas(set(partidos.keys()))
+
+        selecciones: set[str] = set()
+        for id_partido, (_, id_local, id_visitante, _, _) in partidos.items():
+            for id_equipo, id_rival in ((id_local, id_visitante), (id_visitante, id_local)):
+                if (id_partido, id_rival) in estadisticas:
+                    selecciones.add(id_equipo)  # necesita estadística del rival, mismo criterio que obtener_metricas_defensivas
+
+        return sorted(selecciones)
 
     # -- Resolución de competición (mismo patrón que CsvPotencialOfensivoRepository) --
 
@@ -1806,7 +1858,7 @@ class VariablePreparation:
             return self._pendiente()  # competición no reconocida o sin partidos válidos -- sin evidencia
 
         try:
-            resultado = self._aplicar_formula_potencial_ofensivo(metricas)
+            resultado = self._aplicar_formula_potencial_ofensivo(metricas, context.match.competicion)
         except Exception as exc:  # captura amplia intencional -- ver docstring del módulo
             self._registrar_error_preparacion(
                 context,
@@ -1833,13 +1885,18 @@ class VariablePreparation:
         )
 
     @staticmethod
-    def _aplicar_formula_potencial_ofensivo(metricas: MetricasOfensivas) -> float | None:
-        """`models/offensive-strength.md` §21: `Z = Σ vᵢ·zᵢ`, `P = 100·Φ(Z/s)`.
+    def _z_estandarizado_potencial_ofensivo(metricas: MetricasOfensivas) -> float | None:
+        """`models/offensive-strength.md` §21: `Z = Σ vᵢ·zᵢ`, `Z* = Z/s`.
         Una métrica con `σ` indefinida (menos de 2 observaciones en la
         población) o igual a 0 se excluye del cálculo de `Z`, sin
         renormalizar los pesos restantes -- mismo tratamiento que una
         variable opcional ausente en la sección 6.2, citado explícitamente
         por la sección 24. Si las 3 quedan excluidas, devuelve `None`.
+
+        Extraído como paso independiente por IMP-001 (`MODEL-018` §9-10):
+        el z-score estandarizado, ya vigente sin cambios, se reutiliza tanto
+        para el equipo evaluado como para cada equipo de `_media_z_
+        potencial_ofensivo_competicion` -- nunca se toca su fórmula interna.
         """
         z_scores: list[float] = []
         for atributo in _METRICAS_POTENCIAL_OFENSIVO:
@@ -1862,7 +1919,66 @@ class VariablePreparation:
             return None
 
         z = sum(PESO_METRICA_POTENCIAL_OFENSIVO * z_i for z_i in z_scores)
-        phi = statistics.NormalDist().cdf(z / ESCALA_POTENCIAL_OFENSIVO)
+        return z / ESCALA_POTENCIAL_OFENSIVO
+
+    def _media_z_potencial_ofensivo_competicion(self, competicion: str) -> float | None:
+        """IMP-001 (`MODEL-018` §9-10): media histórica de `Z*` -- equivalente
+        a `Φ⁻¹(P̄_competición/100)` -- calculada sobre todos los equipos con
+        estadística real en esta competición (nunca un valor inventado ni
+        una constante fija; recalculada a partir de los mismos datos reales
+        que ya usa `CsvPotencialOfensivoRepository`). Devuelve `None` si no
+        hay ningún equipo con `Z*` calculable -- en ese caso no se aplica
+        shrinkage (ver `_aplicar_formula_potencial_ofensivo`), nunca se
+        sustituye por un valor supuesto.
+        """
+        try:
+            selecciones = self._potencial_ofensivo_repository.listar_selecciones(competicion)
+        except Exception:  # captura amplia intencional -- ver docstring del módulo
+            return None
+
+        z_valores: list[float] = []
+        for id_seleccion in selecciones:
+            try:
+                metricas = self._potencial_ofensivo_repository.obtener_metricas_ofensivas(
+                    id_seleccion, competicion, VENTANA_PARTIDOS_POTENCIAL_OFENSIVO
+                )
+            except Exception:  # captura amplia intencional -- ver docstring del módulo
+                continue
+            if metricas is None or not metricas.equipo:
+                continue
+            z = self._z_estandarizado_potencial_ofensivo(metricas)
+            if z is not None:
+                z_valores.append(z)
+
+        if not z_valores:
+            return None
+        return statistics.fmean(z_valores)
+
+    def _aplicar_formula_potencial_ofensivo(
+        self, metricas: MetricasOfensivas, competicion: str
+    ) -> float | None:
+        """`models/offensive-strength.md` §21, con la etapa de Shrinkage de
+        `MODEL-018` insertada por IMP-001 entre el z-score estandarizado y
+        `Φ`: `Z*_final = w(N)·Z*_equipo + (1−w(N))·Z*_competición`,
+        `w(N)=N/(N+k)` (`K_SHRINKAGE_VARIABLE003_004`). La contracción se
+        aplica exclusivamente sobre `Z*` (antes de `Φ`) -- **nunca** sobre el
+        percentil `P` ya transformado (`MODEL-018` §9). Si no existe media
+        de competición calculable (ningún equipo con `Z*` propio todavía),
+        no se aplica shrinkage y se conserva el z-score crudo -- nunca se
+        inventa una media.
+        """
+        z_estrella = self._z_estandarizado_potencial_ofensivo(metricas)
+        if z_estrella is None:
+            return None
+
+        z_competicion = self._media_z_potencial_ofensivo_competicion(competicion)
+        if z_competicion is None:
+            z_final = z_estrella
+        else:
+            w = _peso_shrinkage(len(metricas.equipo))
+            z_final = w * z_estrella + (1.0 - w) * z_competicion
+
+        phi = statistics.NormalDist().cdf(z_final)
         return 100.0 * phi
 
     # -- Variable004 (Solidez Defensiva) -- BUILD-019, models/defensive-strength.md §13-21 --
@@ -1896,7 +2012,7 @@ class VariablePreparation:
             return self._pendiente()  # competición no reconocida o sin partidos válidos -- sin evidencia
 
         try:
-            resultado = self._aplicar_formula_solidez_defensiva(metricas)
+            resultado = self._aplicar_formula_solidez_defensiva(metricas, context.match.competicion)
         except Exception as exc:  # captura amplia intencional -- ver docstring del módulo
             self._registrar_error_preparacion(
                 context,
@@ -1923,15 +2039,20 @@ class VariablePreparation:
         )
 
     @staticmethod
-    def _aplicar_formula_solidez_defensiva(metricas: _MetricasSolidezDefensiva) -> float | None:
+    def _z_estandarizado_solidez_defensiva(metricas: _MetricasSolidezDefensiva) -> float | None:
         """`models/defensive-strength.md` §15: `Z_def = Σ vᵢ'·zᵢ`,
-        `P_def = 100·(1 − Φ(Z_def/s_def))` -- nótese la inversión `1 − Φ(...)`
-        respecto a Variable003, ya fijada por la especificación (un `Z_def`
-        alto representa peor desempeño defensivo). Una métrica con `σ`
-        indefinida (menos de 2 observaciones en la población) o igual a 0 se
-        excluye del cálculo de `Z_def`, sin renormalizar los pesos restantes
-        -- idéntico al tratamiento de Variable003 (`MODEL-009`/`MODEL-010`
-        §18). Si las 4 quedan excluidas, devuelve `None`.
+        `Z_def* = Z_def/s_def`. Una métrica con `σ` indefinida (menos de 2
+        observaciones en la población) o igual a 0 se excluye del cálculo de
+        `Z_def`, sin renormalizar los pesos restantes -- idéntico al
+        tratamiento de Variable003 (`MODEL-009`/`MODEL-010` §18). Si las 4
+        quedan excluidas, devuelve `None`.
+
+        Extraído como paso independiente por IMP-001 (`MODEL-018` §9-10),
+        mismo motivo que `_z_estandarizado_potencial_ofensivo`: se reutiliza
+        tanto para el equipo evaluado como para cada equipo de `_media_z_
+        solidez_defensiva_competicion` -- la inversión `1 − Φ(...)` (nótese,
+        respecto a Variable003) se aplica **después** de la contracción, no
+        aquí (ver `_aplicar_formula_solidez_defensiva`).
         """
         z_scores: list[float] = []
         for atributo in _METRICAS_SOLIDEZ_DEFENSIVA:
@@ -1954,7 +2075,65 @@ class VariablePreparation:
             return None
 
         z_def = sum(PESO_METRICA_SOLIDEZ_DEFENSIVA * z_i for z_i in z_scores)
-        phi = statistics.NormalDist().cdf(z_def / ESCALA_SOLIDEZ_DEFENSIVA)
+        return z_def / ESCALA_SOLIDEZ_DEFENSIVA
+
+    def _media_z_solidez_defensiva_competicion(self, competicion: str) -> float | None:
+        """IMP-001 (`MODEL-018` §9-10): media histórica de `Z_def*` sobre
+        todos los equipos con estadística real en esta competición -- mismo
+        criterio y mismo motivo que `_media_z_potencial_ofensivo_competicion`,
+        para Variable004. Devuelve `None` si no hay ningún equipo con
+        `Z_def*` calculable -- en ese caso no se aplica shrinkage, nunca se
+        sustituye por un valor supuesto.
+        """
+        try:
+            selecciones = self._solidez_defensiva_repository.listar_selecciones(competicion)
+        except Exception:  # captura amplia intencional -- ver docstring del módulo
+            return None
+
+        z_valores: list[float] = []
+        for id_seleccion in selecciones:
+            try:
+                metricas = self._solidez_defensiva_repository.obtener_metricas_defensivas(
+                    id_seleccion, competicion, VENTANA_PARTIDOS_SOLIDEZ_DEFENSIVA
+                )
+            except Exception:  # captura amplia intencional -- ver docstring del módulo
+                continue
+            if metricas is None or not metricas.equipo:
+                continue
+            z = self._z_estandarizado_solidez_defensiva(metricas)
+            if z is not None:
+                z_valores.append(z)
+
+        if not z_valores:
+            return None
+        return statistics.fmean(z_valores)
+
+    def _aplicar_formula_solidez_defensiva(
+        self, metricas: _MetricasSolidezDefensiva, competicion: str
+    ) -> float | None:
+        """`models/defensive-strength.md` §15, con la etapa de Shrinkage de
+        `MODEL-018` insertada por IMP-001 entre el z-score estandarizado y
+        `Φ`: `Z_def*_final = w(N)·Z_def*_equipo + (1−w(N))·Z_def*_competición`,
+        `w(N)=N/(N+k)` (`K_SHRINKAGE_VARIABLE003_004`, misma constante que
+        Variable003). La contracción se aplica sobre `Z_def*` -- **nunca**
+        sobre el percentil `P_def` ya transformado (`MODEL-018` §9); la
+        inversión `1 − Φ(...)` (`P_def = 100·(1−Φ(Z_def*_final))`), ya
+        vigente sin cambios, se aplica al final, después de contraer. Si no
+        existe media de competición calculable, no se aplica shrinkage y se
+        conserva el z-score crudo -- nunca se inventa una media.
+        """
+        z_estrella = self._z_estandarizado_solidez_defensiva(metricas)
+        if z_estrella is None:
+            return None
+
+        z_competicion = self._media_z_solidez_defensiva_competicion(competicion)
+        if z_competicion is None:
+            z_final = z_estrella
+        else:
+            w = _peso_shrinkage(len(metricas.equipo))
+            z_final = w * z_estrella + (1.0 - w) * z_competicion
+
+        phi = statistics.NormalDist().cdf(z_final)
         return 100.0 * (1.0 - phi)
 
     # -- Variable008 (Calidad de Plantilla, componente Profundidad) -- BUILD-022, models/profundidad-plantilla.md --
