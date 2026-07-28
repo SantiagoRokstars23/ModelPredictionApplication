@@ -31,3 +31,46 @@ EST-000029,Estadio Olímpico Alassane Ouattara,Ebimpé (Abiyán),Costa de Marfil
 EST-000030,Estadio Abdoulaye Wade,Diamniadio (Dakar),Senegal,50000,natural,30,false
 EST-000031,Estadio Azadi,Teherán,Irán,78116,natural,1184,false
 EST-000032,Estadio Şükrü Saracoğlu,Estambul,Turquía,47430,natural,42,false
+EST-000033,Olympiastadion Berlin,Berlín,Alemania,73856,natural,34,false
+EST-000034,VELTINS-Arena,Gelsenkirchen,Alemania,62271,natural,60,true
+EST-000035,MERKUR SPIEL-ARENA,Düsseldorf,Alemania,54600,natural,38,true
+EST-000036,Red Bull Arena,Leipzig,Alemania,47800,natural,113,false
+EST-000037,Signal Iduna Park,Dortmund,Alemania,81365,hibrido,86,false
+EST-000038,Deutsche Bank Park,Fráncfort del Meno,Alemania,59500,natural,112,true
+EST-000039,MHPArena,Stuttgart,Alemania,60058,natural,245,false
+EST-000040,Volksparkstadion,Hamburgo,Alemania,57000,hibrido,6,false
+EST-000041,RheinEnergieSTADION,Colonia,Alemania,50000,natural,37,false
+EST-000042,Mercedes-Benz Stadium,Atlanta,Estados Unidos,71000,artificial,320,true
+EST-000043,AT&T Stadium,Arlington,Estados Unidos,80000,artificial,184,true
+EST-000044,Q2 Stadium,Austin,Estados Unidos,20730,natural,185,false
+EST-000045,Bank of America Stadium,Charlotte,Estados Unidos,74860,artificial,227,false
+EST-000046,NRG Stadium,Houston,Estados Unidos,72220,artificial,32,true
+EST-000047,SoFi Stadium,Inglewood,Estados Unidos,70240,artificial,40,true
+EST-000048,Levi's Stadium,Santa Clara,Estados Unidos,68500,natural,5,false
+EST-000049,State Farm Stadium,Glendale,Estados Unidos,63400,natural,351,true
+EST-000050,Allegiant Stadium,Paradise (Las Vegas),Estados Unidos,65500,,627,true
+EST-000051,Arrowhead Stadium (GEHA Field at Arrowhead Stadium),Kansas City (Misuri),Estados Unidos,76416,natural,260,false
+EST-000052,Children's Mercy Park,Kansas City (Kansas),Estados Unidos,18460,natural,265,false
+EST-000053,Hard Rock Stadium,Miami Gardens,Estados Unidos,64767,natural,3,false
+EST-000054,Inter&Co Stadium,Orlando,Estados Unidos,25500,natural,27,false
+EST-000055,Lincoln Financial Field,Filadelfia,Estados Unidos,67594,hibrido,12,false
+EST-000056,Lumen Field,Seattle,Estados Unidos,66925,artificial,45,false
+EST-000057,Gillette Stadium,Foxborough,Estados Unidos,64628,artificial,87,false
+EST-000058,BC Place,Vancouver,Canadá,54500,artificial,0,true
+EST-000059,Estadio BBVA,Guadalupe,México,53529,hibrido,530,false
+EST-000060,Estadio Akron,Zapopan,México,49813,natural,1670,false
+EST-000061,Estadio Mestalla,Valencia,España,49419,natural,15,false
+EST-000062,Stadion Poljud,Split,Croacia,33987,natural,0,false
+EST-000063,Estadio Monumental Isidro Romero Carbo,Guayaquil,Ecuador,57267,natural,4,false
+EST-000064,Arena Fonte Nova,Salvador,Brasil,48661,natural,8,false
+EST-000065,Arena BRB Mané Garrincha,Brasília,Brasil,69910,natural,1172,false
+EST-000066,Estadio de La Cartuja,Sevilla,España,57619,natural,7,false
+EST-000067,Gazprom Arena (Krestovsky Stadium),San Petersburgo,Rusia,68000,natural,11,true
+EST-000068,Puskás Aréna,Budapest,Hungría,67215,natural,117,false
+EST-000069,Arena Națională,Bucarest,Rumania,55634,natural,83,true
+EST-000070,Stadio Olimpico,Roma,Italia,70634,natural,21,false
+EST-000071,Estádio Olímpico Nilton Santos,Río de Janeiro,Brasil,46931,natural,10,false
+EST-000072,Arena Pantanal,Cuiabá,Brasil,42788,natural,165,false
+EST-000073,Estádio Olímpico Pedro Ludovico,Goiânia,Brasil,13500,natural,760,false
+EST-000074,Estadio Nacional Julio Martínez Prádanos,Santiago,Chile,48745,natural,520,false
+EST-000075,Neo Química Arena,São Paulo,Brasil,48905,natural,799,false

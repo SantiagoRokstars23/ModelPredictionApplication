@@ -1542,9 +1542,50 @@ class VariablePreparation:
                 local=self._calcular_profundidad_plantilla(context, seleccion_local, "local"),
                 visitante=self._calcular_profundidad_plantilla(context, seleccion_visitante, "visitante"),
             ),  # Variable008 (componente Profundidad) -- calculado con dato real (models/profundidad-plantilla.md, MODEL-013)
-            localia=self._pendiente(),  # Variable009 -- bloqueo de esquema, ValorVariable.valor es float (ver docstring)
+            localia=self._calcular_localia(context, seleccion_local, seleccion_visitante),  # Variable009 -- FIX-002
             historial_directo=self._calcular_historial_directo(seleccion_local, seleccion_visitante),  # Variable010
         )
+
+    # -- Variable009 (Localía) -- FIX-002, corrige bloqueo de esquema heredado de BUILD-012 --
+
+    def _calcular_localia(
+        self,
+        context: PredictionContext,
+        seleccion_local: SeleccionInfo | None,
+        seleccion_visitante: SeleccionInfo | None,
+    ) -> ValorVariable:
+        """`docs/16`: "Condición: local/visitante/neutral" -- compara el
+        país del estadio (`estadios.csv.pais`, ya expuesto por
+        `CsvPreparationRepository.obtener_estadio`, documentado desde su
+        propia creación como "suficiente para Localía") contra el país de
+        cada selección (`selecciones.csv.nombre_pais`). Ninguna fuente
+        nueva, ningún dato inventado -- únicamente conecta dos lecturas ya
+        existentes que nunca se habían unido por el bloqueo de tipo de
+        `ValorVariable.valor` (ya corregido, ver `FIX-002` en
+        `app/runtime/prediction_context.py`).
+
+        `disponible=False` (nunca un valor inventado) si falta el estadio
+        del partido, si no se encuentra en `estadios.csv`, o si alguna de
+        las dos selecciones no se resuelve -- mismo criterio de ausencia de
+        evidencia ya usado por el resto de este módulo.
+        """
+        if not context.match.estadio:
+            return self._pendiente()
+        estadio = self._repository.obtener_estadio(context.match.estadio)
+        if estadio is None:
+            return self._pendiente()
+        if seleccion_local is None or seleccion_visitante is None:
+            return self._pendiente()
+
+        pais_estadio = estadio.pais.strip().lower()
+        if pais_estadio == seleccion_local.nombre_pais.strip().lower():
+            condicion = "local"
+        elif pais_estadio == seleccion_visitante.nombre_pais.strip().lower():
+            condicion = "visitante"
+        else:
+            condicion = "neutral"
+
+        return ValorVariable(valor=condicion, disponible=True)
 
     # -- Variable001 (Forma Reciente) -- BUILD-020, models/forma-reciente.md --
 

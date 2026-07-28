@@ -66,8 +66,10 @@ simplemente instancia `HistoricalMuGolProvider` y lo inyecta en `Engine03`.
 `μ_gol` = promedio histórico de goles por equipo por partido, en la
 competición solicitada. Cálculo:
 
-1. Resolver `id_competicion` a partir del nombre de competición recibido
-   (`competiciones.csv`, columna `nombre`).
+1. Resolver `id_competicion` a partir del identificador de competición
+   recibido -- acepta tanto `id_competicion` como `nombre` (`competiciones.csv`,
+   mismo contrato dual ya usado por `CsvPotencialOfensivoRepository`/
+   `_SolidezDefensivaRepository`, unificado aquí por `FIX-001`).
 2. Resolver el conjunto de `id_torneo` (ediciones) que pertenecen a esa
    competición (`torneos.csv`, columna `id_competicion`).
 3. Filtrar `partidos.csv` a las filas cuyo `id_torneo` pertenezca a ese
@@ -210,6 +212,16 @@ class HistoricalMuGolProvider:
             ) from exc
 
     def _resolver_id_competicion(self, competicion: str) -> str | None:
+        """Acepta `id_competicion` o `nombre` (`FIX-001`) -- antes solo
+        aceptaba `nombre`, inconsistente con `CsvPotencialOfensivoRepository`/
+        `_SolidezDefensivaRepository` (Variable003/004), que ya resolvían
+        ambos. Detectado por ejecución real en `ENGINE-001`: pasar
+        `context.match.competicion="COMP-000004"` hacía fallar `Engine03`
+        (`μ_gol` no resuelto) mientras Variable003/004 sí calculaban
+        correctamente con ese mismo valor. Ningún cambio de algoritmo --
+        `μ_gol` sigue siendo el promedio simple ya definido en
+        `models/poisson.md` §6, sin ponderar ni recalibrar.
+        """
         filas = self._leer_csv(_ARCHIVO_COMPETICIONES)
         objetivo = competicion.strip().lower()
         for fila in filas:
@@ -220,7 +232,7 @@ class HistoricalMuGolProvider:
                 raise DatosHistoricosInconsistentes(
                     f"'{_ARCHIVO_COMPETICIONES}' no tiene la columna esperada: {exc}."
                 ) from exc
-            if nombre.strip().lower() == objetivo:
+            if id_competicion.strip().lower() == objetivo or nombre.strip().lower() == objetivo:
                 return id_competicion
         return None
 

@@ -139,9 +139,21 @@ class MatchBlock(_ContextModel):
 class ValorVariable(_ContextModel):
     """Valor de una Variable Oficial, con su disponibilidad explícita —
     nunca se entrega un valor inventado (docs/15/docs/16).
+
+    `valor` acepta `str` además de `float` (`FIX-002`) exclusivamente para
+    Variable009 (Localía), cuyo contrato (`docs/16`: "Condición: local/
+    visitante/neutral") es categórico, no numérico -- a diferencia de las
+    demás 9 Variables Oficiales, todas numéricas 0-100. Antes de este cambio,
+    `valor: float | None` bloqueaba estructuralmente cualquier intento de
+    publicar Localía (`app/preparation/preparation.py` la dejaba
+    permanentemente `_pendiente()`, hallazgo heredado desde `BUILD-012`,
+    confirmado con evidencia de ejecución en `CAL-001`). Ampliar la unión no
+    cambia el comportamiento de ninguna otra Variable: todas siguen
+    asignando únicamente `float`, nunca `str` -- verificado reejecutando
+    `ENGINE-001`/`VALID-001` sin cambio alguno en sus valores.
     """
 
-    valor: float | None = None
+    valor: float | str | None = None
     disponible: bool = True
     muestra_reducida: bool = False
 
