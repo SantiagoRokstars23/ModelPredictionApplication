@@ -49,7 +49,7 @@ ModelPredictionApplication/
 │
 ├── docs/                  # Documentación funcional del modelo (40 documentos)
 ├── engine/                # Especificación conceptual de los 6 motores (Markdown) — no confundir con app/engine/
-├── models/                # Investigación matemática y estadística (13 documentos)
+├── models/                # Investigación matemática y estadística (16 documentos)
 ├── learning/              # Aprendizaje continuo: análisis de errores y recalibración
 ├── prompts/                # Plantillas reutilizables para tareas específicas
 │
@@ -73,15 +73,15 @@ Materializa, paquete por paquete, la arquitectura fijada en [`docs/35-Arquitectu
 | `app/api/` | `predict_controller.py` — único endpoint, `POST /predict`, invoca `PredictMatchUseCase` | Creado (`BUILD-026`); aún no montado en `app/main.py` |
 | `app/application/` | `predict_match.py` — `PredictMatchUseCase`, primer caso de uso de punta a punta | Implementado (`BUILD-025`) |
 | `app/runtime/` | `prediction_context.py` (el objeto `PredictionContext`, append-only), `runtime.py` (`PredictionRuntime`), `engine_pipeline.py` (`EnginePipeline`, integra Preparación + Engine) | Implementado (`BUILD-004`/`BUILD-005`/`INT-001`) |
-| `app/preparation/` | `preparation.py` (`VariablePreparation`) — transforma la Base de Conocimiento en las 12 Variables Oficiales | Implementado para 8 de 9 variables activas (`BUILD-017` a `BUILD-024`) |
-| `app/engine/` | `engine01.py` a `engine06.py` (los 6 motores) + `engine_runner.py` (orquestador por capas) | Implementado (`BUILD-007`, `BUILD-009` a `BUILD-015`) — sin datos reales suficientes todavía para producir un número final |
+| `app/preparation/` | `preparation.py` (`VariablePreparation`) — transforma la Base de Conocimiento en las 12 Variables Oficiales | Implementado para las 9 de 9 variables activas (`BUILD-017` a `BUILD-024`, `FIX-002`) |
+| `app/engine/` | `engine01.py` a `engine06.py` (los 6 motores) + `engine_runner.py` (orquestador por capas). `engine03.py` incluye la corrección Dixon-Coles (`IMP-003`), desactivada por defecto (`RHO_DIXON_COLES=0.0`) | Implementado (`BUILD-007`, `BUILD-009` a `BUILD-015`, `IMP-003`) — produce un número final real para los partidos con historial suficiente (`VALID-003`/`VALID-004`: 35 de 124 evaluables) |
 | `app/persistence/` | Acceso a datos: sesión SQLAlchemy, repositorios, `CsvPreparationRepository`, `HistoricalMuGolProvider`, `RuntimePersistence` | Implementado (`BUILD-003`, `BUILD-008`, `BUILD-016`, `BUILD-017`) |
 | `app/models/` | Clases SQLAlchemy de las 14 tablas físicas (`docs/33`) | Declaradas; ninguna tabla poblada en PostgreSQL todavía |
 | `app/schemas/` | Contratos Pydantic de la API | Bootstrap, sin esquemas propios todavía |
 | `app/services/` | Validación previa, auditoría, bankroll (fuera del camino crítico del Runtime) | Bootstrap, sin implementación todavía |
 | `app/config/` | Configuración transversal | Bootstrap |
 
-**Cadena ya integrada, de punta a punta:** `PredictMatchUseCase → EnginePipeline → VariablePreparation → EngineRunner → Engine01…Engine06`. El único tramo que falta para que sea alcanzable por HTTP es montar el router de `app/api/` en `app/main.py`. Ninguna predicción real es posible todavía porque `data/processed/` no tiene el volumen mínimo de partidos/estadísticas (ver "Estado actual").
+**Cadena ya integrada, de punta a punta:** `PredictMatchUseCase → EnginePipeline → VariablePreparation → EngineRunner → Engine01…Engine06`. El único tramo que falta para que sea alcanzable por HTTP es montar el router de `app/api/` en `app/main.py`. `Engine03` ya incluye, desde `IMP-003`, la corrección Dixon-Coles sobre la matriz de marcadores (`ρ=0` por defecto — desactivada en la práctica, ver "Estado actual"). Predicciones reales **ya son posibles** para un subconjunto de partidos: `data/processed/` tiene hoy 124 partidos reales y 133 filas de estadísticas (`DATA-006` a `DATA-009`), de los cuales 35 resultan evaluables por el Engine con el histórico disponible (`VALID-003`/`VALID-004`) — ver "Estado actual" para el detalle completo.
 
 ### docs/ — Reglas y filosofía del modelo
 
@@ -147,7 +147,7 @@ Cada motor tiene una única responsabilidad. Consume exclusivamente variables ya
 
 Documenta el respaldo estadístico/matemático de cada componente del engine, siguiendo la estructura obligatoria de 8 secciones (Objetivo, Descripción, Problema que resuelve, Ventajas, Limitaciones, Aplicación, Referencias, Versión 2.0).
 
-- [`poisson.md`](models/poisson.md)
+- [`poisson.md`](models/poisson.md) — fundamento de `Engine03`; §16 investiga Dixon-Coles (`MODEL-019`)
 - [`elo.md`](models/elo.md)
 - [`expected-value.md`](models/expected-value.md)
 - [`confidence.md`](models/confidence.md)
@@ -160,6 +160,9 @@ Documenta el respaldo estadístico/matemático de cada componente del engine, si
 - [`profundidad-plantilla.md`](models/profundidad-plantilla.md) — Variable008 (componente Profundidad), ya implementada
 - [`fatiga.md`](models/fatiga.md) — Variable007 (alcance reducido), ya implementada
 - [`disponibilidad.md`](models/disponibilidad.md) — Variable006 (alcance reducido), ya implementada
+- [`estabilizacion-muestras-pequenas.md`](models/estabilizacion-muestras-pequenas.md) — diseño del Shrinkage de Variable003/004 (`MODEL-017`/`018`, implementado en `IMP-002`); investigación de si Variable001 (`MODEL-021`) y Variable007 (`MODEL-022`) necesitan el mismo mecanismo
+- [`dixon-coles.md`](models/dixon-coles.md) — diseño matemático/arquitectónico completo de la corrección Dixon-Coles (`MODEL-020`), implementada en `IMP-003` y validada en `VALID-004`
+- [`error-modelo.md`](models/error-modelo.md) — descomposición cuantitativa del error residual del modelo en 8 dimensiones (`ANL-004`); hallazgo central: ~90-95% del error medido es inherente al Poisson, no corregible por mejor calibración
 
 **Ningún motor puede incorporar fórmulas, variables o algoritmos nuevos sin una investigación previa documentada aquí.**
 
@@ -245,15 +248,19 @@ Ver el detalle completo de reglas, estándares y responsabilidades en [`CLAUDE.m
 
 ## Estado actual
 
-**Arquitectura:** completa en su eje de diseño. Los tres ejes — arquitectura del Engine (`docs/18` a `docs/23`), gobernanza documental y modelo de datos (`docs/31` a `docs/35`) — ya tienen una respuesta documentada de extremo a extremo. `app/` implementa esa arquitectura en Python: `PredictionContext`, `VariablePreparation`, los 6 motores del Engine, `EngineRunner`, `EnginePipeline`, `PredictMatchUseCase` y un primer endpoint HTTP ya existen como código real, no solo como especificación.
+**Versión:** `1.1.0` (ver [`CHANGELOG.md`](CHANGELOG.md)) — primera versión que incluye una aplicación funcional completa, backtesting real y una corrección matemática (Dixon-Coles) diseñada, implementada y validada de punta a punta.
 
-**Variables Oficiales:** de las 9 activas en V1, **8 tienen cálculo real** (Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo, Solidez Defensiva, Disponibilidad de Plantilla y Fatiga en alcance reducido, Calidad de Plantilla en su componente Profundidad, Historial Directo) — solo Localía permanece bloqueada, y únicamente por un problema de esquema (`ValorVariable.valor` no admite todavía un valor de texto), no por falta de método ni de dato. Ver [`docs/17-Matriz-de-Consumo-de-Variables.md`](docs/17-Matriz-de-Consumo-de-Variables.md) y las investigaciones matemáticas en `models/` (`MODEL-009` a `MODEL-015`) — todas completadas, ninguna aprobada todavía por el Arquitecto Estadístico Humano (Constitución, Art. 5).
+**Arquitectura:** completa en su eje de diseño. Los tres ejes — arquitectura del Engine (`docs/18` a `docs/23`), gobernanza documental y modelo de datos (`docs/31` a `docs/35`) — ya tienen una respuesta documentada de extremo a extremo. `app/` implementa esa arquitectura en Python: `PredictionContext`, `VariablePreparation`, los 6 motores del Engine (incluida la corrección Dixon-Coles en `Engine03`), `EngineRunner`, `EnginePipeline`, `PredictMatchUseCase` y un primer endpoint HTTP ya existen como código real, no solo como especificación.
 
-**Base de Conocimiento (`data/processed/selecciones-nacionales/`):** de las 11 entidades del módulo, **5 ya tienen datos reales**: `selecciones.csv` (40 selecciones, Top 40 FIFA), `competiciones.csv` (11 competiciones), `estadios.csv` (32 estadios, uno por selección para 32 de las 40 ya catalogadas), `arbitros.csv` (51 de los 52 árbitros designados oficialmente por FIFA para el Mundial 2026) y `torneos.csv` (13 ediciones reales, incluidas las 5 eliminatorias mundialistas por confederación). Las 6 entidades restantes (`jugadores`, `convocatorias`, `partidos`, `estadisticas_partido`, `lesiones`, `cuotas`) solo tienen el encabezado — en particular, `partidos.csv`/`estadisticas_partido.csv` siguen vacíos, que es la única razón por la que ninguna predicción real es posible todavía (Variable003/004, Nivel A, detienen el Engine sin ese dato). El orden oficial de captura y el Conjunto Mínimo Viable están definidos en [`docs/37-Estrategia-Poblacion-Base-Conocimiento.md`](docs/37-Estrategia-Poblacion-Base-Conocimiento.md); el protocolo de ingesta en [`docs/38-Protocolo-Oficial-Ingesta-Datos.md`](docs/38-Protocolo-Oficial-Ingesta-Datos.md).
+**Variables Oficiales:** de las 9 activas en V1, **las 9 tienen método de cálculo real** — Forma Reciente, Rendimiento en el Torneo, Potencial Ofensivo, Solidez Defensiva, Disponibilidad de Plantilla y Fatiga en alcance reducido, Calidad de Plantilla en su componente Profundidad, Historial Directo, y **Localía**, cuyo bloqueo de esquema (`ValorVariable.valor` no admitía texto) quedó resuelto en `FIX-002`. Localía se calcula correctamente hoy, pero **no tiene efecto numérico todavía** sobre `λ`: `KAPPA_LOCAL`/`KAPPA_VISITANTE` permanecen en `0.0`, placeholders sin calibrar (`CAL-002` probó calibrarlos y decidió no aplicar el cambio por evidencia insuficiente). Ver [`docs/17-Matriz-de-Consumo-de-Variables.md`](docs/17-Matriz-de-Consumo-de-Variables.md) y las investigaciones matemáticas en `models/` (`MODEL-009` a `MODEL-015`) — completadas y, en el caso de Variable003/004, ya implementadas con Shrinkage (`IMP-002`) tras la aprobación explícita del cambio.
 
-**`scripts/` y `tests/`:** ambos existen como directorios bootstrap (sin script ni caso de prueba real todavía). `excel/` aún no se ha creado.
+**Base de Conocimiento (`data/processed/selecciones-nacionales/`):** de las 11 entidades del módulo, **7 ya tienen datos reales**: `selecciones.csv` (62 selecciones), `competiciones.csv` (11 competiciones), `estadios.csv` (76 estadios), `arbitros.csv` (51 árbitros designados oficialmente por FIFA para el Mundial 2026), `torneos.csv` (15 ediciones reales), **`partidos.csv` (124 partidos reales, `DATA-006` a `DATA-009`, vía StatsBomb Open Data: Eurocopa 2020/2024, Copa América 2024)** y **`estadisticas_partido.csv` (133 filas de estadísticas reales por equipo/partido)**. Las 4 entidades restantes (`jugadores`, `convocatorias`, `lesiones`, `cuotas`) solo tienen el encabezado — por eso Variable006 (Disponibilidad, componente Lesiones) y Variable008 (Calidad de Plantilla, componente Valor de Mercado/Experiencia) siguen sin aportar señal real, y `Engine06` (Valor Esperado) nunca puede completarse sin cuotas. El orden oficial de captura y el Conjunto Mínimo Viable están definidos en [`docs/37-Estrategia-Poblacion-Base-Conocimiento.md`](docs/37-Estrategia-Poblacion-Base-Conocimiento.md); el protocolo de ingesta en [`docs/38-Protocolo-Oficial-Ingesta-Datos.md`](docs/38-Protocolo-Oficial-Ingesta-Datos.md).
 
-Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión — incluidas las series `MS-`, `MR-`, `AR-`, `GR-`, `GOV-`, `DEV-`, `DATA-`, `IMP-`, `MAP-`, `MODEL-`, `BUILD-` e `INT-` — se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
+**Backtesting y validación (Fase I):** con los 124 partidos reales, **35 resultan evaluables** por el Engine (el resto queda bloqueado por falta de historial previo del rival — cobertura de StatsBomb limitada a Eurocopa/Copa América, sin Mundial/Eliminatorias/Nations League). Sobre ese conjunto: Accuracy del ganador `60.0%`, Log Loss `0.889`, Brier `0.544` (`VALID-003`/`VALID-004`). La corrección Dixon-Coles (`MODEL-019`/`020`, `IMP-003`) fue diseñada, implementada y validada con un valor de referencia de la literatura (`ρ=-0.13`): mejora Log Loss (`-3.2%`) y Brier (`-2.0%`), pero **no se activa por defecto** (`ρ=0.0`) porque solo 3 de 9 métricas obligatorias mejoraron — no alcanza el criterio de aceptación de `VALID-004`. Una descomposición completa del error (`ANL-004`, [`models/error-modelo.md`](models/error-modelo.md)) encontró que **~90-95% del error observado es matemáticamente inevitable** dado el diseño Poisson-independiente (persistiría incluso con `λ` perfectos) — solo un 5-10% es, en principio, corregible por calibración. **Veredicto explícito, vigente:** la Fase I **no puede declararse cerrada** — el sesgo estructural hacia nunca predecir empates (recall `0%`) persiste sin resolver.
+
+**`scripts/` y `tests/`:** ambos existen como directorios bootstrap (sin script ni caso de prueba real todavía) — todo el backtesting real de la Fase I se ejecutó mediante harnesses temporales de sesión, nunca comprometidos al repositorio (mismo patrón documentado en cada misión `VALID-`/`ANL-` del Tracker). `excel/` aún no se ha creado.
+
+Todo cambio relevante se registra en [`CHANGELOG.md`](CHANGELOG.md). El estado detallado de cada misión — incluidas las series `MS-`, `MR-`, `AR-`, `GR-`, `GOV-`, `DEV-`, `DATA-`, `IMP-`, `MAP-`, `MODEL-`, `BUILD-`, `INT-`, `FIX-`, `CAL-`, `VALID-` y `ANL-` — se mantiene en [`docs/00-Project-Tracker.md`](docs/00-Project-Tracker.md), la referencia oficial para saber qué está completado, en progreso o pendiente.
 
 ## Licencia
 

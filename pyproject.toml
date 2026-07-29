@@ -1,6 +1,6 @@
 [project]
 name = "modelo-santiago"
-version = "0.1.0"
+version = "1.1.0"
 description = "Modelo Santiago -- sistema probabilistico de prediccion de partidos de futbol y evaluacion de mercados de apuestas deportivas."
 requires-python = ">=3.12"
 dependencies = [
