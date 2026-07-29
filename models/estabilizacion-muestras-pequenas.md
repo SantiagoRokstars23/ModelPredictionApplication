@@ -1,12 +1,12 @@
-# Estabilización Estadística de Variable003 y Variable004 en Muestras Pequeñas
+# Estabilización Estadística de Variable003, Variable004, Variable001 y Variable007 en Muestras Pequeñas
 
 **Archivo:** `models/estabilizacion-muestras-pequenas.md`
 
-**Misión:** MODEL-017 — Diseño del mecanismo de estabilización estadística para Variable003 y Variable004; ampliado por **MODEL-018** — Diseño matemático del mecanismo de Shrinkage para Variable003 y Variable004 (sección "Versión 2.0")
+**Misión:** MODEL-017 — Diseño del mecanismo de estabilización estadística para Variable003 y Variable004; ampliado por **MODEL-018** — Diseño matemático del mecanismo de Shrinkage para Variable003 y Variable004 (sección "Versión 2.0"); ampliado por **MODEL-021** — Investigación del Shrinkage para Variable001 (Forma Reciente) (sección 13); ampliado por **MODEL-022** — Investigación de la Variable007 (Fatiga) (sección 14)
 
-**Versión:** 1.1.0-investigación
+**Versión:** 1.3.0-investigación
 
-**Estado:** Investigación — comparación de mecanismos, recomendación única (MODEL-017) y formulación matemática definitiva lista para implementar (MODEL-018). **No implementable todavía como código**: ninguna fórmula, peso, CSV, Variable Oficial ni Engine fue modificado por ninguna de las dos misiones (fuera de alcance explícito de ambos briefs). La adopción de la ecuación aquí formalizada requiere una futura misión de implementación, aprobada por el Arquitecto Estadístico Humano (Constitución, Art. 2/5).
+**Estado:** Investigación — comparación de mecanismos, recomendación única (MODEL-017) y formulación matemática definitiva lista para implementar (MODEL-018), ambas para Variable003/004. **MODEL-021** confirmó que Variable001 sufre un problema estructural emparentado pero no idéntico. **MODEL-022** investiga Variable007 (Fatiga) con el mismo rigor y llega a una conclusión **distinta de ambos casos anteriores**: con la evidencia real disponible hoy, Variable007 **no muestra** el mismo problema — su componente de z-score usa una población grande (tamaño real de torneo, no una pareja de equipos), su propagación hacia `λ` es lineal y no se satura dentro del rango probado, y sus correlaciones con error/Top-4/Accuracy son débiles. **No se recomienda Shrinkage para Variable007 con la evidencia actual.** **No implementable todavía como código**: ninguna fórmula, peso, CSV, Variable Oficial ni Engine fue modificado por ninguna de las cuatro misiones (fuera de alcance explícito de los cuatro briefs). La adopción de cualquier ecuación aquí formalizada requiere una futura misión de implementación, aprobada por el Arquitecto Estadístico Humano (Constitución, Art. 2/5).
 
 ---
 
@@ -316,6 +316,239 @@ Requiere, como mínimo, antes de poder implementarse como código:
 - Elección final del valor de `k` dentro del rango `[5,8]` propuesto (o una futura calibración con más datos).
 - Especificación operacional exacta (qué método expone `P̄_competición` por `id_competicion`, cómo se integra en `_aplicar_formula_potencial_ofensivo`/`_aplicar_formula_solidez_defensiva` sin modificar el z-score interno ya vigente) — tarea de una futura misión de implementación, no de esta.
 - Revalidación mediante un nuevo backtest (mismo patrón que `VALID-001`/`CAL-002`) que confirme que el shrinkage mejora, y no solo cambia, las métricas ya medidas (Accuracy empate, Brier, Log Loss).
+
+---
+
+# Sección 13 — Investigación del Shrinkage para Variable001 (`MODEL-021`)
+
+**Origen:** `ANL-003` midió que Variable001 (Forma Reciente) genera, en datos reales, una contribución a la separación `λ_local`−`λ_visitante` (`0.582` de media) comparable a la de Variable003 (`0.579`) y muy superior a Variable002 (`0.169`), **pese a compartir exactamente el mismo peso formal** (`W_FORMA_RECIENTE=W_RENDIMIENTO_TORNEO=0.5`) — un hallazgo que no se explica por el peso, y que motiva esta investigación: ¿Variable001 sufre el mismo problema estructural que `CAL-004` ya demostró para Variable003/004? Toda la evidencia de esta sección proviene de invocar directamente los repositorios y fórmulas ya existentes (`_FormaRecienteRepository`, `VariablePreparation._calcular_forma_reciente`/`_aplicar_formula_forma_reciente`) — solo lectura, ningún archivo modificado.
+
+## 13.1 Anatomía de Variable001 (Parte 1) — sin reinterpretar, código citado literalmente
+
+```
+Fuente de datos:  partidos.csv (TODO el historial, cualquier torneo/competición —
+                   "sin distinción de amistosos y competiciones", models/forma-
+                   reciente.md §8; a diferencia de Variable003/004, no hay ningún
+                   join contra torneos.csv/competiciones.csv)
+
+Ventana:          N = VENTANA_PARTIDOS_FORMA_RECIENTE = 5 (últimos partidos
+                   oficiales del equipo, orden cronológico descendente, luego
+                   invertido a ascendente antes de usarse — preparation.py,
+                   _FormaRecienteRepository.obtener_ultimos_partidos)
+
+Transformación:   puntos_j = 3 (victoria) | 1 (empate) | 0 (derrota), sistema
+                   estándar de fútbol -- por partido, sobre los goles reales
+
+Normalización:    Forma_Reciente = 100 · (Σ puntos_j) / (3 · n)
+                   n = partidos realmente encontrados (n ≤ N=5)
+
+Punto de "percentil":  NO EXISTE. A diferencia de Variable003/004 (z-score
+                   Z=Σvᵢ·zᵢ, transformado por Φ contra una población de equipos
+                   de la misma competición), Variable001 es una PROPORCIÓN
+                   DIRECTA de puntos sobre el máximo posible -- nunca se calcula
+                   un z-score, nunca hay una población de comparación entre
+                   equipos, nunca se invoca Φ. Ya acotada [0,100] por
+                   construcción aritmética (models/forma-reciente.md §9).
+```
+
+**Diferencia estructural ya visible en la propia anatomía, antes de cualquier dato:** Variable003/004 comparan a un equipo **contra otros equipos de su misma competición** (de ahí que `CAL-004` hablara de "población de comparación" degenerada). Variable001 nunca compara a un equipo contra nadie más — es una estadística **intra-equipo pura** (su propio historial, sin referencia externa). Esto tiene una consecuencia directa para la Parte 6 (simulación): no existe, en el diseño actual, ningún "`Z*_competición`" ni "`μ_competición`" análogo hacia el cual contraer Variable001.
+
+## 13.2 Distribución real (Parte 2) — 53 selecciones con Variable001 calculable (de 62 catalogadas)
+
+| | Variable001 (hoy, sin estabilizar) | Variable003 (post-Shrinkage, `VALID-003`) | Variable003 (pre-Shrinkage, `CAL-004`, N=32) | Variable004 (post-Shrinkage) | Variable004 (pre-Shrinkage) |
+|---|---|---|---|---|---|
+| N observaciones | 53 | 35 | 32 | 35 | 32 |
+| Media | 23.85 | 52.60 | 36.32 | 53.82 | 33.17 |
+| Mediana | 16.67 | 48.10 | 31.69 | 58.78 | 23.98 |
+| Desv. estándar | **28.57** | 17.73 | **27.18** | 16.14 | **28.50** |
+| Mínimo | 0.00 | 21.94 | 3.02 | 18.35 | 2.06 |
+| Máximo | 100.00 | 88.81 | 96.47 | 78.19 | 87.80 |
+| P5 | 0.00 | — | — | — | — |
+| P25 | 0.00 | — | — | — | — |
+| P50 | 16.67 | — | — | — | — |
+| P75 | 33.33 | — | — | — | — |
+| P95 | 88.00 | — | — | — | — |
+
+**Hallazgo directo:** la desviación estándar de Variable001 hoy (`28.57`) es prácticamente idéntica a la de Variable003/004 **antes** de que `IMP-002` aplicara el Shrinkage (`27.18`/`28.50`) — y sustancialmente mayor que ambas **después** del Shrinkage (`17.73`/`16.14`). Esto no demuestra por sí solo un problema (una desviación alta también podría reflejar diferencias reales entre selecciones) — la Parte 3 (dependencia con `N`) es la que distingue señal real de ruido de muestra pequeña.
+
+## 13.3 Dependencia con N (Parte 3)
+
+Sobre las mismas 53 selecciones, con `N` = partidos realmente encontrados (1 a 5):
+
+- **Distribución de `N`:** 17/53 (32%) tienen exactamente `N=1`; 15/53 (28%) alcanzan la ventana completa `N=5`; el resto se reparte entre 2, 3 y 4.
+- **Pearson(N, Variable001) = 0.387** — positivo, débil-moderado.
+- **Pearson(N, |Variable001−50|) = −0.485** — negativo, moderado: a mayor `N`, el valor tiende a alejarse menos de 50. **Más fuerte que el hallazgo análogo de `CAL-004` para Variable003/004 (`r=−0.246`, "dirección correcta pero débil")** — evidencia de que el patrón de degeneración por muestra pequeña es, si acaso, más pronunciado en Variable001 que el que ya justificó implementar el Shrinkage de Variable003/004.
+
+**Prueba matemática exacta, análoga a la de `CAL-004` (no solo correlación):** con `N=1`, `puntos_j ∈ {0,1,3}` produce exactamente **3 valores posibles** de Variable001: `0.0` (derrota), `33.33` (empate) o `100.0` (victoria) — verificado sobre los 17 equipos reales con `N=1` (México, Senegal, Japón, Turquía, Argelia, Egipto, Bolivia, Costa Rica, Serbia, Grecia, Irlanda, Jordania, Arabia Saudita, Irak, Ghana, RD Congo, Haití): **ninguno produce un cuarto valor distinto de esos tres**, sin importar el marcador real del partido (una victoria 5-0 y una victoria 1-0 producen exactamente el mismo `100.0`). Es, estructuralmente, **una degeneración más severa que la de `CAL-004`**: el z-score de Variable003/004 en `N=1` colapsa a `±1` exacto, pero `Φ(±1)` todavía produce dos valores continuos distinguibles (`≈15.9%`/`≈84.1%`); Variable001 en `N=1` no tiene ninguna transformación suavizante — el valor final publicado es, literalmente, uno de solo 3 números posibles.
+
+## 13.4 Sensibilidad (Parte 4) — comparación directa a `+5`/`+10`/`+20` puntos, sobre los 35 partidos evaluables reales
+
+| Δ Variable | +5pts | +10pts | +20pts | Patrón |
+|---|---|---|---|---|
+| Variable003 → Δλ | +0.122 | +0.244 | +0.464 | **Lineal** (≈×2, ×2) |
+| Variable004 → Δλ (rival) | −0.093 | −0.187 | −0.374 | **Lineal** (≈×2, ×2) |
+| Variable001 → Δλ | +0.010 | +0.019 | +0.021 | **Saturante** (×1.9, ×1.1) |
+
+**Hallazgo estructural, con explicación matemática exacta, no solo empírica:** la sensibilidad de Variable001 **se satura** entre `+10` y `+20` puntos — casi no crece más. La causa es identificable en el propio código (`engine01.py`/`engine02.py`, sin modificarlo, solo leído): `m_forma = 1 + clip(0.5·r + 0.5·t, −DELTA_MAX, +DELTA_MAX)` con `DELTA_MAX=0.20`. Un incremento de `+20` puntos en Variable001 (ej. de 50 a 70) mueve `r=(Forma−50)/50` de `0` a `0.4`, y `0.5·r=0.20` — **exactamente el límite `DELTA_MAX`**: el propio clip ya vigente (compartido con Variable002, diseñado en `MODEL-001`/`BUILD-009`, sin relación con esta investigación) satura el efecto de cualquier perturbación grande sobre `λ`. Variable003/004 no tienen un clip comparable en su rango de operación real — su clip estructural (`FO`/`FD ∈ [0,100]`) nunca se activa en datos reales (`ANL-003`, confirmado también aquí: ninguno de los 70 valores de `FO`/`FD` toca 0 o 100).
+
+**Consecuencia central para el diagnóstico:** la contribución realizada de Variable001 a la separación de `λ` (`ANL-003`, `0.582`) **no** proviene de que cada punto de Variable001 mueva `λ` desproporcionadamente — al contrario, su efecto por punto está entre 6 y 12 veces **más contenido** que el de Variable003 (compárese `0.010`/`5pts` vs. `0.122`/`5pts`) y además se satura. Proviene, en cambio, de que **el propio valor de Variable001 varía muchísimo entre partidos reales** (sección 13.2: `desv=28.57`, equivalente a Variable003/004 sin Shrinkage) — el problema no está en la propagación hacia `λ` (ya amortiguada por `DELTA_MAX`), está en la **calidad del dato de entrada** (el valor 0-100 de Variable001 en sí).
+
+## 13.5 Variabilidad — equipos con mayor/menor oscilación (Parte 5)
+
+**Ejemplos reales, más oscilantes** (mayor desviación estándar de puntos en su ventana): Rep. Checa (`N=2`, puntos `[3,0]`, desv=`2.12`); Bélgica/Noruega/Venezuela/Eslovaquia (`N=3`, patrón `[3,0,0]` o `[0,3,0]`, desv=`1.73`); Francia (`N=5`, `[3,3,3,0,0]`, Variable001=`60.0`); Argentina (`N=5`, `[3,3,3,3,0]`, Variable001=`80.0`).
+
+**Ejemplos reales, más estables** (desv=`0`, resultado idéntico en toda la ventana): España (`N=5`, `[3,3,3,3,3]`, Variable001=`100.0` — 5 victorias consecutivas, señal real, no ruido); Paraguay (`N=5`, `[0,0,0,0,0]`, Variable001=`0.0` — 5 derrotas consecutivas); Alemania/Austria/Canadá/Ucrania/Panamá/Albania (rachas perfectas de menor tamaño).
+
+**Matiz importante, no visible sin este desglose:** a diferencia de la degeneración de `N=1` (arbitraria, depende solo de un resultado aislado), los casos de `N=5` con `desv=0` **sí representan señal real** (una racha genuina de 5 resultados idénticos) — no son ruido disfrazado de información. Esto distingue Variable001 de Variable003/004 en un aspecto favorable: su ventana máxima (`N=5`) captura un fenómeno futbolístico reconocible (racha de forma), mientras que la degeneración de `CAL-004` en Variable003/004 no tenía ninguna interpretación futbolística — era puramente un artefacto de una población de 2 equipos.
+
+## 13.6 Simulación conceptual del Shrinkage sobre Variable001 (Parte 6) — sin implementar
+
+**Adaptación necesaria, no una copia literal:** la ecuación oficial de Variable003/004 (sección 12 de este documento) contrae el **z-score** `Z*` hacia `Z*_competición` (la media histórica de `Z*` en esa competición). Variable001 **no tiene z-score ni población de competición** (sección 13.1) — aplicar "exactamente el mismo shrinkage" en sentido literal es matemáticamente imposible sin inventar una población que hoy no existe en el diseño. La adaptación estructuralmente más simple y fiel al mismo principio (contracción hacia un valor neutro cuando la evidencia propia es escasa) es contraer directamente sobre el valor ya acotado `[0,100]`, hacia el punto neutro teórico `50` (no hay `Φ` que invertir, ya que Variable001 nunca pasó por `Φ`):
+
+```
+w(N) = N / (N + k)                              (misma forma funcional, MODEL-018 §12)
+Forma_final = w(N) · Forma_cruda + (1 − w(N)) · 50
+```
+
+**Efecto simulado (matemático, con `k=5`, mismo valor de referencia que Variable003/004 — no una calibración, solo para ilustrar):**
+
+| N | w(N) | Ejemplo: Forma_cruda=100 (racha perfecta) | Ejemplo: Forma_cruda=0 (racha nula) |
+|---|---|---|---|
+| 1 | 0.167 | 100 → **58.3** | 0 → **41.7** |
+| 3 | 0.375 | 100 → **68.75** | 0 → **31.25** |
+| 5 | 0.5 | 100 → **75.0** | 0 → **25.0** |
+| N→∞ (hipotético) | →1 | → 100 (converge al valor crudo) | → 0 |
+
+**Efecto esperado en equipos con `N` pequeño:** fuerte contracción hacia 50 — un único resultado (victoria o derrota) dejaría de producir un valor tan extremo como `100`/`0`, exactamente el mismo tipo de corrección que `IMP-002` ya aplicó a Variable003/004. **Efecto esperado en equipos con `N` grande (`N=5`, el máximo real hoy):** contracción moderada pero **nunca completa** — incluso en `N=5` (la ventana llena), `w(5)=0.5` con `k=5`, por lo que una racha perfecta real de España (`100.0`) quedaría en `75.0`, no en `100.0` — a diferencia de Variable003/004 (`N_máx=10`, `w(10)≈0.67` con el mismo `k`), Variable001 **nunca alcanza el mismo nivel de convergencia al valor crudo que Variable003/004**, porque su ventana máxima (`5`) es la mitad de la de Variable003/004 (`10`) — con `k=5` fijo, el "punto de estabilización" (`w=0.5`) coincide exactamente con la ventana máxima de Variable001, mientras que para Variable003/004 la ventana máxima ya supera ese punto. **Esto es un hallazgo de diseño relevante para una futura calibración**, no una recomendación de valor: si se reutilizara `k=5` sin ajuste, Variable001 quedaría contraída de forma más agresiva, en términos relativos, que Variable003/004 — razonable dado que su ventana es más corta (menos evidencia máxima posible), pero debe decidirse explícitamente, no heredarse por accidente. **Convergencia cuando N→∞:** matemáticamente, `w(N)→1` y `Forma_final→Forma_cruda`, igual que en Variable003/004 — aunque `N→∞` no es alcanzable en este dominio (`VENTANA_PARTIDOS_FORMA_RECIENTE=5` es un tope estructural, no una muestra creciente), por lo que en la práctica el sistema nunca abandona la zona de contracción parcial.
+
+## 13.7 Riesgo (Parte 7)
+
+- **Pérdida de sensibilidad a rachas reales:** el riesgo más concreto, con evidencia directa en la sección 13.5 — España (`N=5`, 5 victorias reales consecutivas) pasaría de `100.0` a `75.0` con `k=5`; Paraguay (`N=5`, 5 derrotas reales) de `0.0` a `25.0`. A diferencia de Variable003/004 (donde `CAL-004` demostró que el valor extremo en muestra pequeña **no** reflejaba necesariamente una diferencia real), aquí una racha de 5 resultados **sí** es, en general, información futbolística genuina — el riesgo de sobre-suavizar una señal real es mayor que el que existía para Variable003/004.
+- **Retraso en detectar cambios reales:** un equipo que mejora abruptamente (ej. cambio de entrenador) tardaría más partidos en que Variable001 lo refleje plenamente, exactamente el mismo tipo de retraso ya aceptado como trade-off para Variable003/004 en `MODEL-017`/`018` — pero, dado que la ventana de Variable001 (`N=5`) ya es más corta que la de Variable003/004 (`N=10`), el retraso *relativo* introducido por el shrinkage sería proporcionalmente mayor.
+- **Exceso de suavizado dado un `k` mal elegido:** mismo riesgo genérico ya documentado en la sección 6 de este documento para Variable003/004 — aplica igual aquí, con el matiz adicional (13.6) de que reutilizar `k=5` sin ajuste produciría, en términos relativos a la ventana máxima, una contracción más fuerte que la que Variable003/004 recibieron.
+- **Riesgo no compartido con Variable003/004, específico de Variable001:** al no existir una "población de competición" hacia la cual contraer, la única alternativa estructuralmente simple es contraer hacia el punto neutro fijo `50` — una elección menos informada que "la media real de la competición" (que sí incorpora información real sobre el nivel de esa competición específica). Contraer hacia `50` asume que "el equipo promedio" tiene Forma Reciente igual a 50 en general, una asunción más fuerte y potencialmente menos precisa que la que Variable003/004 ya hacían.
+
+## 13.8 Comparación explícita Variable003 vs. Variable001 (Parte 8)
+
+| Aspecto | Variable003 (Potencial Ofensivo) | Variable001 (Forma Reciente) |
+|---|---|---|
+| Mecanismo de cálculo | z-score `Z=Σvᵢzᵢ` vs. población de la competición, transformado por `Φ` | Proporción directa de puntos, sin población, sin `Φ` |
+| Población de comparación | Sí — otros equipos de la misma competición y ventana de fechas | **No existe** — estadística intra-equipo pura |
+| Ventana máxima | `N=10` | `N=5` |
+| Mecanismo de degeneración en `N` mínimo | Colapso del z-score a `±1` exacto (población de 2) | Colapso a exactamente 3 valores discretos (`0`/`33.3`/`100`) |
+| Severidad de la degeneración | Severa (`CAL-004`) | **Más severa en términos de resolución** (3 valores vs. un continuo tras `Φ`) |
+| Desv. estándar real (sin estabilizar) | 27.18 (`CAL-004`, N=32) | 28.57 (N=53) — **magnitud comparable** |
+| Correlación `N` vs. extremidad | `r=−0.246` (débil) | `r=−0.485` (moderada, **más fuerte**) |
+| Sensibilidad marginal sobre `λ` (+5pts) | `+0.122`, lineal | `+0.010`, **saturante** (clip `DELTA_MAX` ya vigente) |
+| Contribución realizada a `|Δλ|` (`ANL-003`) | 0.579 | 0.582 (**comparable**, pese a sensibilidad marginal ~12× menor) |
+| ¿El valor en `N` alto sigue siendo información real? | Cuestionable en `N` intermedio (Inglaterra, `CAL-004`, osciló 19pts en `N≈8-10`) | Sí — una racha de 5 resultados es información futbolística reconocible |
+| Mecanismo de shrinkage directamente reutilizable | — (es el original) | **No literalmente** — requiere adaptación (contracción sobre el valor 0-100, no sobre un z-score) |
+
+**¿Es el mismo problema estadístico?** **Parcialmente.** Comparten la causa raíz genérica (muestra pequeña, ausencia de cualquier mecanismo de estabilización) y una magnitud de varianza real comparable — pero **no** comparten el mecanismo exacto de degeneración (colapso de z-score vs. colapso a 3 valores discretos), **no** comparten el canal de propagación hacia `λ` (Variable003 propaga casi sin freno; Variable001 ya está parcialmente contenida por `DELTA_MAX`), y **no** comparten la interpretabilidad del valor en el extremo superior de su ventana (el `N=10` de Variable003 todavía mostraba volatilidad cuestionable; el `N=5` de Variable001 refleja, en los casos revisados, rachas reales). Tratar ambos problemas con la fórmula idéntica sería una simplificación conveniente pero no rigurosa.
+
+---
+
+# Sección 14 — Investigación de la Variable007 (Fatiga) (`MODEL-022`)
+
+**Origen:** `ANL-003` y `MODEL-021` señalaron que Variable007 mostraba, como Variable001, sensibilidad marginal baja pero contribución realizada relativamente alta a la separación de `λ` — misma pregunta que ya se hizo para Variable001: ¿sufre el mismo problema estructural de muestra pequeña? Toda la evidencia de esta sección proviene de invocar directamente los repositorios y fórmulas ya existentes (`_FatigaRepository`, `VariablePreparation._calcular_fatiga`/`_aplicar_formula_fatiga_descanso`/`_aplicar_formula_fatiga_viaje`) sobre los 35 partidos evaluables de `VALID-003`/`ANL-002`/`ANL-003`/`MODEL-021` (mismo snapshot temporal) — solo lectura, ningún archivo modificado.
+
+## 14.1 Anatomía de Variable007 — dos señales de naturaleza distinta, promediadas
+
+```
+Fatiga = (Fatiga_Descanso + Fatiga_Viaje) / 2   si ambas disponibles
+       = la señal única disponible                si solo una lo está
+       = disponible=False                          si ninguna lo está (debut absoluto)
+
+--- Fatiga_Descanso (z-score, SÍ usa Φ) ---
+Entrada:        Días_descanso(T) = fecha_partido − fecha(Partido_anterior(T))
+                Partido_anterior: el más reciente con fecha < fecha_partido, sobre
+                TODO partidos.csv, sin filtrar por torneo (§4) -- una sola
+                observación, no una ventana de N partidos propios
+Población:      TODAS las selecciones con fila en partidos.csv del MISMO
+                id_torneo del partido a predecir, con Partido_anterior resoluble
+                (metricas.selecciones_torneo ∩ partido_anterior_por_seleccion)
+Normalización:  z = (Días_descanso(T) − μ_población) / σ_población
+Transformación: Fatiga_Descanso = 100·(1 − Φ(z))   -- invertido, más descanso = menos fatiga
+Exclusión:      si población < 2 selecciones o σ=0 → None (§13)
+
+--- Fatiga_Viaje (categórica, SIN z-score, SIN Φ) ---
+Entrada:        ciudad/país del estadio del Partido_anterior(T) vs. del partido actual
+Categoría:      0 (misma ciudad) | 1 (mismo país) | 2 (país distinto)
+Fórmula:        Fatiga_Viaje = 50 · Categoría   -- mapeo ordinal fijo, sin calibrar
+```
+
+**Diferencia estructural clave, visible antes de cualquier dato:** Variable007 es un HÍBRIDO de dos mecanismos que ninguna de las variables ya investigadas combina — un componente tipo z-score/`Φ` (como Variable003/004) pero cuya población es **el tamaño real de un torneo** (potencialmente grande), no una ventana de partidos propios; y un componente puramente categórico (3 valores fijos, sin ninguna dependencia de tamaño de muestra en absoluto, ni siquiera análoga a la de Variable001). No existe, además, ningún concepto de "N partidos propios" para `Fatiga_Descanso` — depende de un único dato (el partido inmediatamente anterior), no de un promedio sobre una ventana como Variable001 (`N≤5`) o Variable003/004 (`N≤10`).
+
+## 14.2 Distribución real (Parte 4) — 70 observaciones (35 partidos × 2 lados), 100% con dato
+
+| | media | mediana | desv.std | min | max | P5 | P25 | P50 | P75 | P95 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Variable007 (Fatiga) | 56.70 | 57.59 | **20.31** | 6.56 | 100.0 | 28.41 | 43.52 | 57.59 | 67.52 | 95.11 |
+| Variable001 (referencia, `MODEL-021`) | 23.85 | 16.67 | 28.57 | 0.0 | 100.0 | — | — | — | — | — |
+| Variable003 pre-Shrinkage (`CAL-004`) | 36.32 | 31.69 | 27.18 | 3.02 | 96.47 | — | — | — | — | — |
+
+**Hallazgo directo:** la desviación estándar real de Variable007 (`20.31`) es **notablemente menor** que la de Variable001 (`28.57`) y que la de Variable003/004 antes del Shrinkage (`27-29`) — más cercana, aunque todavía superior, a Variable003/004 **después** del Shrinkage (`16-18`). Primera señal cuantitativa de que Variable007 no está en la misma situación que las dos variables ya investigadas.
+
+## 14.3 Degeneración por tamaño de muestra (Parte 3) — resultado distinto a `CAL-004`/`MODEL-021`
+
+**Sobre `Fatiga_Descanso`, la única señal con z-score:** la "N" relevante no es el historial propio del equipo (no existe ventana), es **el tamaño de la población del torneo**. Medida directamente sobre los 35 partidos: media=`14.83`, mediana=`15`, rango `0-19`; distribución por tamaño exacto: `{0: 1, 12: 11, 13: 3, 14: 2, 15: 1, 16: 2, 18: 12, 19: 3}`. **Solo 1 de 35 partidos tiene población insuficiente (`<2`)** — ese caso ya está correctamente excluido por la propia fórmula (`_aplicar_formula_fatiga_descanso` devuelve `None`, cae a `Fatiga_Viaje` en solitario). **Ningún partido de esta muestra tiene una población de tamaño 2 o 3** (a diferencia de la premisa de la pregunta del brief) — el mínimo real observado, quitando el único caso excluido, es `12` selecciones. **No se reproduce el patrón de `CAL-004`/`MODEL-021`**: no hay colapso a pocos valores discretos, porque la población nunca es pequeña en la práctica — los torneos reales de este dataset (Eurocopa, Copa América, más los partidos agregados por `DATA-009`) tienen entre 16 y 24 selecciones participantes, y la mayoría comparten un `Partido_anterior` resoluble.
+
+**Limitación honesta de esta conclusión, no ocultada:** la evidencia es tranquilizadora **para los tipos de torneo presentes en la muestra actual** (torneos continentales grandes) — no garantiza el mismo comportamiento para una futura "torneo" de tipo bilateral o eliminatoria de 2 equipos (ej. una serie de repechaje), donde la población de `selecciones_torneo` sí podría reducirse a 2, reproduciendo el mismo tipo de degeneración ya demostrada para Variable003/004. No hay ningún caso así en los datos actuales para verificarlo empíricamente.
+
+**Sobre `Fatiga_Viaje`:** sin ninguna dependencia de tamaño de muestra por diseño (categórico fijo, sección 14.1) — no aplica el concepto de degeneración por `N` en absoluto.
+
+## 14.4 Sensibilidad real (Parte 2) — comparación con Variable001/Variable003/Variable004
+
+| Δ Variable007 (local) | Δλ_local media | Δλ_visitante media | Patrón |
+|---|---|---|---|
+| +5pts | −0.0242 | +0.0184 | |
+| +10pts | −0.0484 | +0.0369 | |
+| +20pts | −0.0968 | +0.0736 | **Lineal** (×2.0, ×2.0 exacto) |
+
+**A diferencia de Variable001 (`MODEL-021`, saturante entre `+10`/`+20`), Variable007 escala de forma perfectamente lineal** en el rango probado — sin evidencia de que el clip compartido `pen=clip(...,0,PEN_MAX=0.30)` se active: con `Variable006`/`Variable008` siempre en `0` (sin dato, `termino_disponibilidad=termino_calidad=0`), el término de fatiga por sí solo (`W_FATIGA·fatiga/100 = fatiga/300`) alcanzaría el techo `PEN_MAX=0.30` solo si `fatiga=90`; en la muestra real (media `56.7`, P95 `95.1`), la mayoría de los casos probados con `+20` quedan por debajo de ese umbral, por lo que el clip casi no se activa — comportamiento distinto al de Variable001, cuyo clip relevante (`DELTA_MAX=0.20` dentro de `m_forma`) se satura ya con `+20` puntos desde valores típicos.
+
+## 14.5 Saturación (Parte 6)
+
+- **En el valor crudo:** `0/70` observaciones tocan `0.0`; `2/70` (2.9%) tocan exactamente `100.0` — saturación mínima y ocasional en el techo, coherente con casos reales de fatiga máxima (cero días de descanso y viaje intercontinental simultáneos), no un artefacto de la fórmula.
+- **En la propagación hacia `λ`:** ninguna evidencia de saturación dentro del rango `+5` a `+20` (sección 14.4) — la respuesta es lineal, a diferencia de Variable001.
+- **Zonas donde aumentar Fatiga ya no cambia `λ`:** ninguna detectada en el rango probado; teóricamente existiría cerca de `fatiga→100` combinado con el clip `PEN_MAX`, pero no se observó en esta muestra.
+
+## 14.6 Correlaciones (Parte 5)
+
+| Par | r (Pearson) |
+|---|---|
+| Fatiga ↔ λ (propio) | 0.404 |
+| Fatiga ↔ \|Δλ\| | 0.167 (débil) |
+| Fatiga ↔ Accuracy | 0.017 (nula) |
+| Fatiga ↔ Empate real | −0.017 (nula) |
+| Fatiga ↔ Error (\|λ−goles reales\|) | 0.228 (débil) |
+| Fatiga ↔ Top-4 (marcador real presente) | −0.165 (débil) |
+
+**Interpretación:** Fatiga influye en `λ` de forma moderada y esperada (r=0.404, consistente con su rol de penalización), pero **no muestra ninguna asociación fuerte con la calidad de la predicción** (Accuracy, Top-4, Empates) — las correlaciones con esas 4 métricas de desempeño son todas débiles o nulas. No hay evidencia de que Variable007, en su estado actual, sea una fuente relevante de error sistemático.
+
+## 14.7 Comparación explícita Variable001 vs. Variable007 (Parte 7)
+
+| Aspecto | Variable001 (Forma Reciente) | Variable007 (Fatiga) |
+|---|---|---|
+| Mecanismo | Proporción directa, sin z-score, sin `Φ`, sin población | Híbrido: z-score/`Φ` (Descanso) + categórico fijo (Viaje) |
+| "N" relevante | Ventana propia, `N≤5` partidos | Sin ventana propia (1 solo dato); población = tamaño del torneo |
+| Degeneración por muestra pequeña | **Sí, severa** — colapso a 3 valores exactos en `N=1` (32% de los casos) | **No detectada** — población real siempre ≥12 en esta muestra (excepto 1 caso ya excluido correctamente por la fórmula) |
+| Desv. estándar real | 28.57 | 20.31 (menor) |
+| Sensibilidad marginal sobre `λ` (+5pts) | +0.010, **saturante** (`+10`→`+20` casi sin cambio) | −0.024 (local), **lineal** (`×2`, `×2` exacto) |
+| Propagación hacia `λ` | Amortiguada por `DELTA_MAX=0.20` (satura fácilmente) | Amortiguada por `PEN_MAX=0.30`, pero no se satura en el rango real observado |
+| Correlación con Error/Top-4/Accuracy | No medida directamente en `MODEL-021` (fuera de su alcance) | Débiles/nulas (0.02-0.23) |
+| Riesgo de shrinkage | Alto — rachas de `N=5` suelen ser señal real | Bajo — sin evidencia de degeneración que corregir |
+
+**Conclusión de la comparación:** Variable001 y Variable007 **no** son el mismo caso. Variable001 mostró evidencia matemática directa de degeneración (3 valores exactos en `N=1`) con un canal de propagación ya amortiguado pero un problema real en el valor crudo. Variable007 no muestra evidencia de degeneración con los datos actuales — su componente de z-score opera sobre poblaciones grandes en la práctica, y su propagación hacia `λ` es lineal y bien comportada.
+
+## 14.8 ¿Merece Shrinkage? (Parte 8)
+
+**No, con la evidencia actual — respuesta cuantitativa, no categórica:**
+
+1. **Sin degeneración matemática demostrada:** a diferencia de `CAL-004` (Variable003/004, población=2 exacta, colapso a `±1` probado) y de `MODEL-021` (Variable001, `N=1` exacto, colapso a 3 valores probado), esta misión **no encontró ningún caso real** de población pequeña para `Fatiga_Descanso` en los 35 partidos evaluables — el mínimo observado (excluyendo el único caso ya correctamente excluido) es `12`.
+2. **Sensibilidad lineal, no saturante ni explosiva:** el comportamiento sobre `λ` es predecible y proporcional en el rango probado (`+5` a `+20`).
+3. **Correlaciones débiles con desempeño:** ninguna asociación relevante con Accuracy, Top-4 o Empates que sugiera que Variable007 esté distorsionando las predicciones.
+4. **Salvedad explícita, no un "no" absoluto:** la conclusión depende de que los torneos futuros mantengan poblaciones grandes (`selecciones_torneo`) — un escenario de torneo bilateral o serie de 2 equipos podría reproducir la degeneración de `CAL-004`, sin evidencia todavía disponible para confirmarlo o descartarlo. Por eso la recomendación es **"No, con la evidencia actual"**, no **"Nunca"**.
 
 ---
 
