@@ -2,7 +2,7 @@
 
 **Archivo:** `models/poisson.md`
 
-**Misión:** MODEL-003 — Modelo Matemático de Poisson (fundacional) / MODEL-007 — Calibración Matemática del Modelo de Poisson (orden de aplicación, restricciones matemáticas, ejemplo simbólico completo) / MODEL-019 — Investigación del ajuste Dixon-Coles para la corrección del sesgo de empates (sección 16)
+**Misión:** MODEL-003 — Modelo Matemático de Poisson (fundacional) / MODEL-007 — Calibración Matemática del Modelo de Poisson (orden de aplicación, restricciones matemáticas, ejemplo simbólico completo) / MODEL-019 — Investigación del ajuste Dixon-Coles para la corrección del sesgo de empates (sección 16) / MODEL-020 — referencia añadida en sección 15 al diseño completo de la integración, desarrollado en `models/dixon-coles.md` (documento separado, sin cambios de contenido en el resto de este archivo)
 
 **Versión:** 2.2.0-investigación
 
@@ -171,7 +171,7 @@ Es el núcleo probabilístico del sistema: recibe las salidas de `engine/01`/`02
 Pendiente, condicionado a datos reales suficientes en `data/results/`:
 
 - Calibración de `μ_gol` (dinámico por competición), `κ`, `κ'`.
-- ~~Evaluación de si incorporar la corrección de Dixon-Coles (`τ`/`ρ`) mejora la capacidad predictiva en marcadores bajos~~ — investigado en `MODEL-019` (sección 16): recomendación **C) investigar además la magnitud de separación de `λ`** antes de migrar, no una migración directa. La calibración de `ρ` (si una futura misión de implementación lo justifica) sigue condicionada a que exista suficiente historial real, mismo motivo ya señalado aquí.
+- ~~Evaluación de si incorporar la corrección de Dixon-Coles (`τ`/`ρ`) mejora la capacidad predictiva en marcadores bajos~~ — investigado en `MODEL-019` (sección 16): recomendación **C) investigar además la magnitud de separación de `λ`** antes de migrar, no una migración directa. Esa investigación adicional se ejecutó en `ANL-002` (≈70-80% del sesgo atribuible a independencia, ≈20-30% a separación de `λ`), y el diseño matemático/arquitectónico completo de la integración —ecuación definitiva, renormalización, parámetro `ρ`, compatibilidad demostrada con `Engine04`-`06`, plan de `IMP-003`— ya está desarrollado en `models/dixon-coles.md` (`MODEL-020`). La calibración de `ρ` sigue condicionada a que exista suficiente historial real, mismo motivo ya señalado aquí.
 - Validación empírica de la elección de truncar la matriz en 6 goles (sección 8) contra la distribución real observada.
 - Definición formal, en `docs/28`, de "Goles Esperados" como Variable Derivada de Categoría D con fórmula ya definida (actualización pendiente, fuera de esta misión).
 
