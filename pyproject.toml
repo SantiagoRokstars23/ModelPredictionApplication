@@ -19,6 +19,13 @@ dependencies = [
     # esa mision. Version recomendada por docs/34-Decision-Oficial-del-Stack-Tecnologico.md,
     # seccion 11: psycopg 3 (sucesor activamente mantenido de psycopg2).
     "psycopg[binary]>=3.1",
+    # Agregado en DATA-012: cliente HTTP para app/ingestion (importadores de
+    # entidades maestras contra API-Football, docs/43-Pipeline-de-Ingesta.md).
+    # Ningun modulo de app/ consumia una API externa hasta ahora -- httpx se
+    # elige sobre `requests` por soportar de forma nativa un `MockTransport`
+    # sin dependencias de test adicionales (tests/ingestion/ lo usa para no
+    # golpear la red real en ninguna prueba).
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
